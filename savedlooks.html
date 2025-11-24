@@ -22,7 +22,7 @@
       font-weight: 100;
     }
 
-    /* ====== TOP NAVBAR (MATCH INDEX PAGE) ====== */
+    /* ====== TOP NAVBAR (MATCH OTHER PAGES) ====== */
     header {
       position: sticky;
       top: 0;
@@ -42,6 +42,8 @@
       font-size: 13px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+      text-decoration: none;
+      color: #111;
     }
 
     nav ul {
@@ -56,6 +58,7 @@
       align-items: center;
     }
 
+    /* Unified top-level menu items - applies to both main nav and account */
     .menu > li,
     .right-nav .account {
       position: relative;
@@ -80,6 +83,7 @@
       border-bottom-color: #111;
     }
 
+    /* Dropdown base */
     .submenu {
       position: absolute;
       top: 100%;
@@ -95,38 +99,46 @@
     }
 
     .submenu li {
+      position: relative;
       font-size: 12px;
       text-transform: none;
       letter-spacing: 0.04em;
       padding: 4px 16px;
       cursor: pointer;
       white-space: nowrap;
+      list-style: none;
     }
 
     .submenu li a {
       text-decoration: none;
       color: #111;
       display: block;
+      padding: 4px 0;
     }
 
     .submenu li:hover {
       background: #f3f3f3;
     }
 
-    .menu > li:hover > .submenu {
+    /* Show first-level submenu on hover OR while focused */
+    .menu > li:hover > .submenu,
+    .menu > li:focus-within > .submenu {
       display: block;
     }
 
+    /* Nested submenu (for Category, Saved looks) */
     .submenu .submenu {
       top: 0;
       left: 100%;
       margin-left: 4px;
     }
 
-    .submenu li:hover > .submenu {
+    .submenu li:hover > .submenu,
+    .submenu li:focus-within > .submenu {
       display: block;
     }
 
+    /* Account section on the right */
     .right-nav {
       display: flex;
       align-items: center;
@@ -142,7 +154,8 @@
       left: auto;
     }
 
-    .right-nav .account:hover .submenu {
+    .right-nav .account:hover .submenu,
+    .right-nav .account:focus-within .submenu {
       display: block;
     }
 
@@ -203,8 +216,8 @@
     .look-meta-line-strong {
       font-size: 11px;
       font-weight: 500;
-      color: #000;           /* black */
-      letter-spacing: 0;     /* remove tracking */
+      color: #000;
+      letter-spacing: 0;
       margin-bottom: 2px;
       text-transform: uppercase; /* LOOK 1, LOOK 2 */
     }
@@ -253,13 +266,13 @@
 
     .empty-state {
       font-size: 13px;
-      color: #666;
+      color: #969696;
       margin-top: 30px;
     }
 
     .empty-state a {
-      color: #111;
-      text-decoration: underline;
+      color: #969696;
+      text-decoration: none;
     }
 
     /* ====== DELETE MODAL (COHESIVE WITH SITE) ====== */
@@ -346,38 +359,43 @@
   <!-- TOP NAVBAR -->
   <header>
     <div class="nav-inner">
-      <div class="logo">DROBE</div>
+      <!-- Clickable logo back to home -->
+      <a href="index.html" class="logo">DROBE</a>
 
       <nav>
         <ul class="menu">
+          <!-- BROWSE -->
           <li>
-            <a href="index.html">Browse</a>
+            <a href="#">Browse</a>
             <ul class="submenu">
+              <!-- Back to home grid -->
               <li><a href="index.html">All</a></li>
               <li>
                 Category
                 <ul class="submenu">
-                  <li><a href="#">Tops</a></li>
-                  <li><a href="#">Outerwears</a></li>
-                  <li><a href="#">Bottoms</a></li>
-                  <li><a href="#">Dresses</a></li>
-                  <li><a href="#">Shoes</a></li>
-                  <li><a href="#">Accessories</a></li>
-                  <li><a href="#">Bags</a></li>
-                  <li><a href="#">What ifs</a></li>
+                  <li><a href="#" class="category-link" data-category="tops">Tops</a></li>
+                  <li><a href="#" class="category-link" data-category="outerwears">Outerwears</a></li>
+                  <li><a href="#" class="category-link" data-category="bottoms">Bottoms</a></li>
+                  <li><a href="#" class="category-link" data-category="dresses">Dresses</a></li>
+                  <li><a href="#" class="category-link" data-category="shoes">Shoes</a></li>
+                  <li><a href="#" class="category-link" data-category="accessories">Accessories</a></li>
+                  <li><a href="#" class="category-link" data-category="bags">Bags</a></li>
+                  <li><a href="#" class="category-link" data-category="whatifs">What ifs</a></li>
                 </ul>
               </li>
             </ul>
           </li>
 
-        <!-- PAIR -->
+          <!-- PAIR -->
           <li>
             <a href="#">Pair</a>
             <ul class="submenu">
               <li><a href="scroll&select.html">Scroll &amp; Select</a></li>
-              <li><a href="Layer&Preview.html">Layer &amp; Preview</a></li>
+              <!-- ✅ lowercase, correct filename -->
+              <li><a href="layer&preview.html">Layer &amp; Preview</a></li>
             </ul>
           </li>
+
           <!-- PLAN -->
           <li>
             <a href="#">Plan</a>
@@ -385,6 +403,7 @@
               <li>
                 <a href="#">Saved looks</a>
                 <ul class="submenu">
+                  <!-- this page -->
                   <li><a href="savedlooks.html">Mine</a></li>
                   <li><a href="#">Others / Inspirations</a></li>
                 </ul>
@@ -392,6 +411,7 @@
               <li><a href="#">Calendar</a></li>
             </ul>
           </li>
+
           <!-- ADD -->
           <li>
             <a href="#">Add</a>
@@ -400,6 +420,7 @@
               <li><a href="#">Shop</a></li>
             </ul>
           </li>
+
           <!-- ANALYSIS -->
           <li>
             <a href="#">Analysis</a>
@@ -409,28 +430,12 @@
               <li><a href="#">Spending</a></li>
             </ul>
           </li>
+
           <!-- EXPLORE -->
           <li>
             <a href="#">Explore</a>
             <ul class="submenu">
               <li><a href="#">Sell / Explore / Buy</a></li>
-            </ul>
-          </li>
-
-
-          <li>
-            <a href="#">Analysis</a>
-            <ul class="submenu">
-              <li><a href="#">Overview</a></li>
-              <li><a href="#">Wear frequency / unworn items</a></li>
-              <li><a href="#">Spending</a></li>
-            </ul>
-          </li>
-
-          <li>
-            <a href="#">Explore</a>
-            <ul class="submenu">
-              <li><a href="#">Sell / explore / buy</a></li>
             </ul>
           </li>
         </ul>
@@ -441,7 +446,7 @@
           <a href="#">Account</a>
           <ul class="submenu">
             <li><a href="#">Settings</a></li>
-            <li><a href="#">Help &amp; feedback</a></li>
+            <li><a href="#">Help &amp; Feedback</a></li>
           </ul>
         </div>
       </div>
@@ -510,7 +515,7 @@
         container.innerHTML = `
           <div class="empty-state">
             You haven’t saved any looks yet.
-            Try building one in <a href="layer-preview.html">Layer &amp; preview</a>.
+            Try building one in <a href="layer&preview.html">Layer &amp; Preview</a>.
           </div>
         `;
         return;
@@ -538,13 +543,12 @@
           const occasion = look.occasion || 'Everyday / casual';
 
           metaDiv.innerHTML = `
-  <div class="look-meta-line-strong">LOOK ${looks.length - index}</div>
-  <div><span class="look-meta-label">Created:</span> <span class="look-meta-value">${createdDate}</span></div>
-  <div><span class="look-meta-label">Last worn:</span> <span class="look-meta-value">${lastWorn}</span></div>
-  <div><span class="look-meta-label">Season / weather:</span> <span class="look-meta-value">${seasonWeather}</span></div>
-  <div><span class="look-meta-label">Occasion:</span> <span class="look-meta-value">${occasion}</span></div>
-`;
-
+            <div class="look-meta-line-strong">LOOK ${looks.length - index}</div>
+            <div><span class="look-meta-label">Created:</span> <span class="look-meta-value">${createdDate}</span></div>
+            <div><span class="look-meta-label">Last worn:</span> <span class="look-meta-value">${lastWorn}</span></div>
+            <div><span class="look-meta-label">Season / weather:</span> <span class="look-meta-value">${seasonWeather}</span></div>
+            <div><span class="look-meta-label">Occasion:</span> <span class="look-meta-value">${occasion}</span></div>
+          `;
 
           const actions = document.createElement('div');
           actions.className = 'look-actions';
@@ -594,7 +598,7 @@
           container.innerHTML = `
             <div class="empty-state">
               You haven’t saved any looks yet.
-              Try building one in <a href="layer-preview.html">Layer &amp; preview</a>.
+              Try building one in <a href="layer&preview.html">Layer &amp; Preview</a>.
             </div>
           `;
         }
