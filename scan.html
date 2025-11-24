@@ -18,10 +18,150 @@
       font-family: quasimoda, sans-serif;
       font-style: normal;
       font-weight: 100;
+    }
+
+    /* ====== TOP NAVBAR (MATCH OTHER PAGES) ====== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(6px);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 35px;
+    }
+
+    .logo {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #111;
+    }
+
+    nav ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .menu {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .menu > li,
+    .right-nav .account {
+      position: relative;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .menu > li > a,
+    .right-nav .account > a {
+      text-decoration: none;
+      color: #111;
+      padding: 4px 0;
+      display: inline-block;
+      border-bottom: 1px solid transparent;
+    }
+
+    .menu > li > a:hover,
+    .right-nav .account > a:hover {
+      border-bottom-color: #111;
+    }
+
+    /* Dropdown base */
+    .submenu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 180px;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 8px 0;
+      margin: 0;
+      display: none;
+      z-index: 1100;
+      list-style: none;
+    }
+
+    .submenu li {
+      position: relative;
+      font-size: 12px;
+      text-transform: none;
+      letter-spacing: 0.04em;
+      padding: 4px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      list-style: none;
+    }
+
+    .submenu li a {
+      text-decoration: none;
+      color: #111;
+      display: block;
+      padding: 4px 0;
+    }
+
+    .submenu li:hover {
+      background: #f3f3f3;
+    }
+
+    /* Show first-level submenu on hover OR while focused */
+    .menu > li:hover > .submenu,
+    .menu > li:focus-within > .submenu {
+      display: block;
+    }
+
+    /* Nested submenu (for Category, Saved looks) */
+    .submenu .submenu {
+      top: 0;
+      left: 100%;
+      margin-left: 4px;
+    }
+
+    .submenu li:hover > .submenu,
+    .submenu li:focus-within > .submenu {
+      display: block;
+    }
+
+    /* Account section on the right */
+    .right-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .right-nav .account {
+      position: relative;
+    }
+
+    .right-nav .account .submenu {
+      right: 0;
+      left: auto;
+    }
+
+    .right-nav .account:hover .submenu,
+    .right-nav .account:focus-within .submenu {
+      display: block;
+    }
+
+    /* ====== PAGE LAYOUT FOR SCAN CONTENT ====== */
+    .scan-page-wrapper {
+      min-height: calc(100vh - 70px); /* viewport minus approx header height */
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
       padding: 20px;
     }
 
@@ -112,6 +252,7 @@
       padding: 20px;
       margin: 25px 0;
       border-left: 3px solid #111;
+      text-align: left;
     }
 
     .next-steps h3 {
@@ -126,6 +267,8 @@
       font-size: 13px;
       color: #666;
       line-height: 1.5;
+      padding-left: 18px;
+      margin: 0;
     }
 
     .demo-buttons {
@@ -179,43 +322,142 @@
   </style>
 </head>
 <body>
-  <div class="demo-container">
-    <div class="success-animation">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path d="M20 6L9 17l-5-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
 
-    <div class="demo-content">
-      <h1>Item Scanned</h1>
-      
-      <div class="item-preview">
-        <img id="itemImage" src="acc8.png" alt="Scanned Item">
-        <div class="item-details" id="itemDetails">
-          <!-- Populated by JavaScript -->
+  <!-- TOP NAVBAR -->
+  <header>
+    <div class="nav-inner">
+      <!-- Clickable logo back to home -->
+      <a href="index.html" class="logo">DROBE</a>
+
+      <nav>
+        <ul class="menu">
+          <!-- BROWSE -->
+          <li>
+            <a href="#">Browse</a>
+            <ul class="submenu">
+              <!-- Back to home grid -->
+              <li><a href="index.html">All</a></li>
+              <li>
+                Category
+                <ul class="submenu">
+                  <li><a href="#" class="category-link" data-category="tops">Tops</a></li>
+                  <li><a href="#" class="category-link" data-category="outerwears">Outerwears</a></li>
+                  <li><a href="#" class="category-link" data-category="bottoms">Bottoms</a></li>
+                  <li><a href="#" class="category-link" data-category="dresses">Dresses</a></li>
+                  <li><a href="#" class="category-link" data-category="shoes">Shoes</a></li>
+                  <li><a href="#" class="category-link" data-category="accessories">Accessories</a></li>
+                  <li><a href="#" class="category-link" data-category="bags">Bags</a></li>
+                  <li><a href="#" class="category-link" data-category="whatifs">What ifs</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <!-- PAIR -->
+          <li>
+            <a href="#">Pair</a>
+            <ul class="submenu">
+              <li><a href="scroll&select.html">Scroll &amp; Select</a></li>
+              <li><a href="layer&preview.html">Layer &amp; Preview</a></li>
+            </ul>
+          </li>
+
+          <!-- PLAN -->
+          <li>
+            <a href="#">Plan</a>
+            <ul class="submenu">
+              <li>
+                <a href="#">Saved looks</a>
+                <ul class="submenu">
+                  <li><a href="savedlooks.html">Mine</a></li>
+                  <li><a href="#">Others / Inspirations</a></li>
+                </ul>
+              </li>
+              <li><a href="#">Calendar</a></li>
+            </ul>
+          </li>
+
+          <!-- ADD -->
+          <li>
+            <a href="#">Add</a>
+            <ul class="submenu">
+              <li><a href="additem.html">Upload</a></li>
+              <li><a href="#">Shop</a></li>
+            </ul>
+          </li>
+
+          <!-- ANALYSIS -->
+          <li>
+            <a href="#">Analysis</a>
+            <ul class="submenu">
+              <li><a href="#">Overview</a></li>
+              <li><a href="#">Wear Frequency / Unworn Items</a></li>
+              <li><a href="#">Spending</a></li>
+            </ul>
+          </li>
+
+          <!-- EXPLORE -->
+          <li>
+            <a href="#">Explore</a>
+            <ul class="submenu">
+              <li><a href="#">Sell / Explore / Buy</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="right-nav">
+        <div class="account">
+          <a href="#">Account</a>
+          <ul class="submenu">
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Help &amp; Feedback</a></li>
+          </ul>
         </div>
       </div>
+    </div>
+  </header>
 
-      <p class="demo-text">
-        This item has been automatically added to your DROBE archive. The QR code recognized the brand and pre-filled all the details for you.
-      </p>
-
-      <div class="next-steps">
-        <h3>What happens next:</h3>
-        <ul>
-          <li>Item is now searchable in your digital closet</li>
-          <li>Create outfits with this item</li>
-          <li>Wear tracking and cost analysis</li>
-          <li>Sell this item to other users</li>
-        </ul>
+  <!-- SCAN CONTENT -->
+  <main class="scan-page-wrapper">
+    <div class="demo-container">
+      <div class="success-animation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M20 6L9 17l-5-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
 
-      <div class="demo-buttons">
-        <a href="index.html" class="primary-button">View in My Closet</a>
-        <a href="additem.html" class="secondary-button">Add Another Item</a>
+      <div class="demo-content">
+        <h1>Item Scanned</h1>
+        
+        <div class="item-preview">
+          <img id="itemImage" src="acc8.png" alt="Scanned Item">
+          <div class="item-details" id="itemDetails">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+
+        <p class="demo-text">
+          This item has been automatically added to your DROBE archive. The QR code recognized the brand and pre-filled all the details for you.
+        </p>
+
+        <div class="next-steps">
+          <h3>What happens next:</h3>
+          <ul>
+            <li>Item is now searchable in your digital closet</li>
+            <li>Create outfits with this item</li>
+            <li>Wear tracking and cost analysis</li>
+            <li>Sell this item to other users</li>
+          </ul>
+        </div>
+
+        <div class="demo-buttons">
+          <a href="index.html" class="primary-button" id="viewClosetBtn">View in My Closet</a>
+          <a href="additem.html" class="secondary-button">Add Another Item</a>
+        </div>
       </div>
     </div>
-  </div>
+  </main>
 
   <script>
     // Map brands/items to details
@@ -277,7 +519,7 @@
     const customItem = urlParams.get('item');
     const customCategory = urlParams.get('category');
 
-    // Find the item data
+    // Find the item data (fallback to simuero)
     const itemData = itemDatabase[brand.toLowerCase()] || itemDatabase['simuero'];
     
     // Override with custom parameters if provided
@@ -294,16 +536,17 @@
       Price: ${itemData.price}
     `;
 
-    // Update page title
+    // Update page title text
     document.querySelector('h1').textContent = `${itemData.name} Added`;
 
-    // Add interactive feedback
-    document.querySelector('.primary-button').addEventListener('click', function(e) {
+    // Add interactive feedback to primary button
+    const viewBtn = document.getElementById('viewClosetBtn');
+    viewBtn.addEventListener('click', function(e) {
       e.preventDefault();
       this.textContent = 'Opening Archive...';
       setTimeout(() => {
         window.location.href = 'index.html';
-      }, 1000);
+      }, 800);
     });
   </script>
 </body>
