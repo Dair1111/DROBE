@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DROBE – Layer & Preview</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background-color: white;
+      background-image:
+        radial-gradient(circle, #555555 1px, transparent 1px);
+      background-size: 50px 50px; /* space between dots */
+      background-attachment: fixed;
+      font-family: quasimoda, sans-serif;
+      font-style: normal;
+      font-weight: 100;
+    }
+
+    /* ====== CAPTURE MODE (for html2canvas) ====== */
+    body.capture-mode {
+      background-image: none;          /* no dots while capturing */
+      background-color: #ffffff;
+    }
+
+    body.capture-mode .layer-canvas {
+      background-color: #ffffff;       /* solid white in saved image */
+    }
+
+    /* ====== TOP NAVBAR (MATCH OTHER PAGES) ====== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(6px);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 35px;
+    }
+
+    .logo {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    nav ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .menu {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .menu > li,
+    .right-nav .account {
+      position: relative;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .menu > li > a,
+    .right-nav .account > a {
+      text-decoration: none;
+      color: #111;
+      padding: 4px 0;
+      display: inline-block;
+      border-bottom: 1px solid transparent;
+    }
+
+    .menu > li > a:hover,
+    .right-nav .account > a:hover {
+      border-bottom-color: #111;
+    }
+
+    .submenu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 180px;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 8px 0;
+      margin: 0;
+      display: none;
+      z-index: 1100;
+      list-style: none;
+    }
+
+    .submenu li {
+      font-size: 12px;
+      text-transform: none;
+      letter-spacing: 0.04em;
+      padding: 4px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .submenu li a {
+      text-decoration: none;
+      color: #111;
+      display: block;
+    }
+
+    .submenu li:hover {
+      background: #f3f3f3;
+    }
+
+    .menu > li:hover > .submenu {
+      display: block;
+    }
+
+    .submenu .submenu {
+      top: 0;
+      left: 100%;
+      margin-left: 4px;
+    }
+
+    .submenu li:hover > .submenu {
+      display: block;
+    }
+
+    .right-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .right-nav .account {
+      position: relative;
+    }
+
+    .right-nav .account .submenu {
+      right: 0;
+      left: auto;
+    }
+
+    .right-nav .account:hover .submenu {
+      display: block;
+    }
+
+    /* ====== GLOBAL BUTTON STYLE ====== */
+    .toolbar-btn,
+    .footer-btn,
+    .picker-btn {
+      border: 1px solid #111;
+      background: white;
+      color: #111;
+      padding: 8px 14px;
+      font-family: quasimoda, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.05s ease;
+    }
+
+    .toolbar-btn:hover,
+    .footer-btn:hover,
+    .picker-btn:hover {
+      background: #111;
+      color: #fff;
+    }
+
+    .toolbar-btn:active,
+    .footer-btn:active,
+    .picker-btn:active {
+      transform: translateY(1px);
+      background: #000;
+      color: #fff;
+    }
+
+    .footer-btn.secondary {
+      border-style: dashed;
+    }
+
+    .picker-btn.secondary {
+      border-style: dashed;
+    }
+
+    /* ====== LAYER & PREVIEW MAIN AREA ====== */
+    .layer-page {
+      padding: 15px 35px 35px;
+    }
+
+    .layer-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .layer-canvas {
+      position: relative;
+      margin-top: 10px;
+      border: 1px dashed #ccc;
+      /* translucent so background dots show through */
+      background-color: rgba(255, 255, 255, 0.6);
+      min-height: calc(100vh - 210px);
+      overflow: hidden;
+
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: contain;
+    }
+
+    /* ====== DRAGGABLE ITEMS ====== */
+    .draggable-item {
+      position: absolute;
+      cursor: move;
+      transform-origin: center center;
+      z-index: 1;
+    }
+
+    .draggable-item img {
+      width: 180px;
+      height: auto;
+      display: block;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    /* ====== FOOTER BUTTONS ====== */
+    .layer-footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* ====== ITEM PICKER OVERLAY ====== */
+    .picker-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+    }
+
+    .picker-backdrop.active {
+      display: flex;
+    }
+
+    .picker-panel {
+      background: white;
+      border: 1px solid #ddd;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      max-width: 1100px;
+      width: 90%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .picker-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .picker-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    .picker-grid {
+      padding: 14px 20px 10px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 24px;
+      overflow: auto;
+      flex: 1;
+    }
+
+    .picker-item {
+      border: 1px dashed transparent;
+      padding: 6px;
+      background: white;
+      cursor: pointer;
+      transition: border 0.2s ease, background 0.2s ease;
+      text-align: center;
+    }
+
+    .picker-item img {
+      width: 100%;
+      max-height: 80px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .picker-label {
+      font-size: 10px;
+      margin-top: 4px;
+      text-transform: none;
+      letter-spacing: 0.06em;
+      text-align: center;
+    }
+
+    .picker-item.selected {
+      border-color: #111;
+      background: #fff;
+    }
+
+    .picker-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px 12px;
+      border-top: 1px solid #eee;
+      font-size: 11px;
+    }
+
+    .picker-footer-left {
+      color: #666;
+    }
+
+    .picker-footer-right {
+      display: flex;
+      gap: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .picker-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .draggable-item img {
+        width: 140px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .picker-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .layer-toolbar,
+      .layer-footer {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVBAR -->
+  <header>
+    <div class="nav-inner">
+      <div class="logo">DROBE</div>
+
+      <nav>
+        <ul class="menu">
+          <!-- BROWSE -->
+          <li>
+            <a href="index.html">Browse</a>
+            <ul class="submenu">
+              <li><a href="index.html">All</a></li>
+              <li>
+                Category
+                <ul class="submenu">
+                  <li><a href="#">Tops</a></li>
+                  <li><a href="#">Outerwears</a></li>
+                  <li><a href="#">Bottoms</a></li>
+                  <li><a href="#">Dresses</a></li>
+                  <li><a href="#">Shoes</a></li>
+                  <li><a href="#">Accessories</a></li>
+                  <li><a href="#">Bags</a></li>
+                  <li><a href="#">What ifs</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <!-- PAIR -->
+          <li>
+            <a href="#">Pair</a>
+            <ul class="submenu">
+              <li><a href="scroll&select.html">Scroll &amp; Select</a></li>
+              <li><a href="layer&preview.html">Layer &amp; Preview</a></li>
+            </ul>
+          </li>
+
+          <!-- PLAN -->
+          <li>
+            <a href="#">Plan</a>
+            <ul class="submenu">
+              <li>
+                <a href="#">Saved looks</a>
+                <ul class="submenu">
+                  <li><a href="savedlooks.html">Mine</a></li>
+                  <li><a href="#">Others / Inspirations</a></li>
+                </ul>
+              </li>
+              <li><a href="#">Calendar</a></li>
+            </ul>
+          </li>
+
+          <!-- ADD -->
+          <li>
+            <a href="#">Add</a>
+            <ul class="submenu">
+              <li><a href="additem.html">Upload</a></li>
+              <li><a href="#">Shop</a></li>
+            </ul>
+          </li>
+
+          <!-- ANALYSIS -->
+          <li>
+            <a href="#">Analysis</a>
+            <ul class="submenu">
+              <li><a href="#">Overview</a></li>
+              <li><a href="#">Wear Frequency / Unworn Items</a></li>
+              <li><a href="#">Spending</a></li>
+            </ul>
+          </li>
+
+          <!-- EXPLORE -->
+          <li>
+            <a href="#">Explore</a>
+            <ul class="submenu">
+              <li><a href="#">Sell / Explore / Buy</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="right-nav">
+        <div class="account">
+          <a href="#">Account</a>
+          <ul class="submenu">
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Help &amp; Feedback</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- LAYER & PREVIEW CONTENT -->
+  <main class="layer-page">
+    <div class="layer-toolbar">
+      <button class="toolbar-btn" id="setBackgroundBtn">Set background</button>
+      <button class="toolbar-btn" id="addItemsBtn">+ Add items</button>
+      <button class="toolbar-btn" id="randomBtn">Random look</button>
+      <button class="toolbar-btn" id="clearCanvasBtn">Clear canvas</button>
+    </div>
+
+    <div class="layer-canvas" id="layerCanvas">
+      <!-- Draggable layered items will be added here -->
+    </div>
+
+    <div class="layer-footer">
+      <button class="footer-btn secondary" id="saveLookBtn">Save to saved looks</button>
+      <button class="footer-btn" id="saveImageBtn">Finish – download image</button>
+    </div>
+  </main>
+
+  <!-- hidden input for background upload -->
+  <input type="file" id="bgInput" accept="image/*" style="display:none">
+
+  <!-- ITEM PICKER OVERLAY -->
+  <div class="picker-backdrop" id="itemPicker">
+    <div class="picker-panel">
+      <div class="picker-header">
+        <span>Select items to layer</span>
+        <button class="picker-close" id="closePickerBtn">&times;</button>
+      </div>
+      <div class="picker-grid" id="pickerGrid">
+        <!-- Thumbnails injected by JS -->
+      </div>
+      <div class="picker-footer">
+        <div class="picker-footer-left">
+          <span id="selectionCount">0 items selected</span>
+        </div>
+        <div class="picker-footer-right">
+          <button class="picker-btn secondary" id="pickerClearBtn">Clear selection</button>
+          <button class="picker-btn" id="pickerAddBtn">Add to canvas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- html2canvas for capturing canvas as image -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <script>
+    // ====== DATA: ITEMS / FILENAMES ======
+    const allItems = [];
+
+    function addCategory(prefix, count, label, categoryKey) {
+      for (let i = 1; i <= count; i++) {
+        allItems.push({
+          src: `${prefix}${i}.png`,
+          alt: `${label} ${i}`,
+          category: categoryKey
+        });
+      }
+    }
+
+    addCategory('top', 24, 'Top', 'top');
+    addCategory('outerwear', 19, 'Outerwear', 'outerwear');
+    addCategory('bottom', 37, 'Bottom', 'bottom');
+    addCategory('dress', 23, 'Dress', 'dress');
+    addCategory('shoe', 21, 'Shoe', 'shoe');
+    addCategory('acc', 28, 'Accessory', 'acc');
+    addCategory('bag', 23, 'Bag', 'bag');
+    addCategory('if', 15, 'What if', 'if');
+
+    // ====== ELEMENTS ======
+    const itemPicker = document.getElementById('itemPicker');
+    const pickerGrid = document.getElementById('pickerGrid');
+    const selectionCount = document.getElementById('selectionCount');
+    const addItemsBtn = document.getElementById('addItemsBtn');
+    const closePickerBtn = document.getElementById('closePickerBtn');
+    const pickerClearBtn = document.getElementById('pickerClearBtn');
+    const pickerAddBtn = document.getElementById('pickerAddBtn');
+    const clearCanvasBtn = document.getElementById('clearCanvasBtn');
+    const randomBtn = document.getElementById('randomBtn');
+    const layerCanvas = document.getElementById('layerCanvas');
+    const setBackgroundBtn = document.getElementById('setBackgroundBtn');
+    const bgInput = document.getElementById('bgInput');
+    const saveImageBtn = document.getElementById('saveImageBtn');
+    const saveLookBtn = document.getElementById('saveLookBtn');
+
+    let currentZ = 1;
+    let placementIndex = 0;
+
+    // ====== BUILD PICKER GRID ======
+    function buildPickerGrid() {
+      pickerGrid.innerHTML = '';
+      allItems.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'picker-item';
+        div.dataset.src = item.src;
+        div.dataset.alt = item.alt;
+        div.dataset.index = index;
+
+        div.innerHTML = `
+          <img src="${item.src}" alt="${item.alt}">
+          <div class="picker-label">${item.alt}</div>
+        `;
+
+        div.addEventListener('click', () => {
+          div.classList.toggle('selected');
+          updateSelectionCount();
+        });
+
+        pickerGrid.appendChild(div);
+      });
+    }
+
+    function updateSelectionCount() {
+      const selected = pickerGrid.querySelectorAll('.picker-item.selected').length;
+      selectionCount.textContent = `${selected} item${selected === 1 ? '' : 's'} selected`;
+    }
+
+    function clearSelection() {
+      pickerGrid.querySelectorAll('.picker-item.selected').forEach(el => {
+        el.classList.remove('selected');
+      });
+      updateSelectionCount();
+    }
+
+    // ====== OPEN / CLOSE PICKER ======
+    function openPicker() {
+      itemPicker.classList.add('active');
+    }
+
+    function closePicker() {
+      itemPicker.classList.remove('active');
+    }
+
+    // ====== HELPER: ADD ONE ITEM TO CANVAS ======
+    function addItemToCanvas(src, alt) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'draggable-item';
+      wrapper.dataset.scale = '1';
+
+      const offsetX = 80 + (placementIndex % 5) * 60;
+      const offsetY = 40 + Math.floor(placementIndex / 5) * 40;
+      placementIndex++;
+
+      wrapper.style.left = `${offsetX}px`;
+      wrapper.style.top = `${offsetY}px`;
+      wrapper.style.transform = 'scale(1)';
+
+      wrapper.innerHTML = `<img src="${src}" alt="${alt}">`;
+
+      makeDraggable(wrapper);
+      makeZoomable(wrapper);
+
+      layerCanvas.appendChild(wrapper);
+    }
+
+    // ====== CANVAS: ADD SELECTED ITEMS ======
+    function addSelectedToCanvas() {
+      const selected = pickerGrid.querySelectorAll('.picker-item.selected');
+      if (!selected.length) {
+        closePicker();
+        return;
+      }
+
+      selected.forEach((itemDiv) => {
+        const src = itemDiv.dataset.src;
+        const alt = itemDiv.dataset.alt;
+        addItemToCanvas(src, alt);
+      });
+
+      closePicker();
+      clearSelection();
+    }
+
+    function clearCanvas() {
+      layerCanvas.innerHTML = '';
+      placementIndex = 0;
+      // keep background; if you want to clear too, uncomment:
+      // layerCanvas.style.backgroundImage = '';
+    }
+
+    // ====== RANDOM LOOK (1 ITEM PER CATEGORY) ======
+    function addRandomLook() {
+      clearCanvas(); // start fresh, keep any background
+
+      const categories = ['top', 'outerwear', 'bottom', 'dress', 'shoe', 'acc', 'bag', 'if'];
+
+      categories.forEach(cat => {
+        const pool = allItems.filter(item => item.category === cat);
+        if (!pool.length) return;
+        const randomItem = pool[Math.floor(Math.random() * pool.length)];
+        addItemToCanvas(randomItem.src, randomItem.alt);
+      });
+    }
+
+    // ====== DRAG LOGIC ======
+    function makeDraggable(el) {
+      el.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        currentZ += 1;
+        el.style.zIndex = currentZ;
+
+        const canvasRect = layerCanvas.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+
+        function onMouseMove(ev) {
+          let x = ev.clientX - canvasRect.left - offsetX;
+          let y = ev.clientY - canvasRect.top - offsetY;
+
+          el.style.left = `${x}px`;
+          el.style.top = `${y}px`;
+        }
+
+        function onMouseUp() {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+    }
+
+    // ====== ZOOM (SCROLL TO SCALE) ======
+    function makeZoomable(el) {
+      el.addEventListener('wheel', function (e) {
+        e.preventDefault();
+
+        let scale = parseFloat(el.dataset.scale || '1');
+
+        if (e.deltaY < 0) {
+          scale += 0.1;
+        } else {
+          scale -= 0.1;
+        }
+
+        if (scale < 0.3) scale = 0.3;
+        if (scale > 3) scale = 3;
+
+        el.dataset.scale = scale.toFixed(2);
+        el.style.transform = `scale(${scale})`;
+      });
+    }
+
+    // ====== BACKGROUND UPLOAD ======
+    function handleBackgroundUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        layerCanvas.style.backgroundImage = `url('${e.target.result}')`;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ====== CAPTURE CANVAS AS IMAGE (using html2canvas) ======
+    function captureCanvas(callback) {
+      const body = document.body;
+      body.classList.add('capture-mode');   // hide dots, force white for capture
+
+      html2canvas(layerCanvas, {
+        backgroundColor: '#ffffff'
+      }).then(canvas => {
+        body.classList.remove('capture-mode');
+        callback(canvas);
+      }).catch(err => {
+        body.classList.remove('capture-mode');
+        console.error('Error while capturing canvas:', err);
+        alert('Something went wrong while capturing the look.');
+      });
+    }
+
+    function downloadCanvasImage() {
+      const draggableItems = layerCanvas.querySelectorAll('.draggable-item');
+      if (!draggableItems.length && !layerCanvas.style.backgroundImage) {
+        alert('There is nothing on the canvas yet.');
+        return;
+      }
+
+      captureCanvas(canvas => {
+        const link = document.createElement('a');
+        link.download = 'drobe-look.jpg';
+        link.href = canvas.toDataURL('image/jpeg', 0.9);
+        link.click();
+      });
+    }
+
+    // ====== SAVE LOOK TO LOCALSTORAGE (for savedlooks.html) ======
+    function saveLookToSavedLooks() {
+      const draggableItems = layerCanvas.querySelectorAll('.draggable-item');
+      if (!draggableItems.length && !layerCanvas.style.backgroundImage) {
+        alert('Add at least one item or a background before saving.');
+        return;
+      }
+
+      captureCanvas(canvas => {
+        const dataURL = canvas.toDataURL('image/jpeg', 0.7); // compressed
+
+        const existing = JSON.parse(localStorage.getItem('drobeSavedLooks') || '[]');
+
+        const look = {
+          id: Date.now(),
+          createdAt: new Date().toISOString(),
+          image: dataURL,
+          itemsCount: draggableItems.length,
+          hasBackground: !!layerCanvas.style.backgroundImage
+        };
+
+        existing.push(look);
+        localStorage.setItem('drobeSavedLooks', JSON.stringify(existing));
+
+        window.location.href = 'savedlooks.html';
+      });
+    }
+
+    // ====== EVENT WIRING ======
+    document.addEventListener('DOMContentLoaded', () => {
+      buildPickerGrid();
+
+      addItemsBtn.addEventListener('click', openPicker);
+      closePickerBtn.addEventListener('click', closePicker);
+      pickerClearBtn.addEventListener('click', clearSelection);
+      pickerAddBtn.addEventListener('click', addSelectedToCanvas);
+      clearCanvasBtn.addEventListener('click', clearCanvas);
+      randomBtn.addEventListener('click', addRandomLook);
+
+      itemPicker.addEventListener('click', (e) => {
+        if (e.target === itemPicker) {
+          closePicker();
+        }
+      });
+
+      setBackgroundBtn.addEventListener('click', () => {
+        bgInput.click();
+      });
+
+      bgInput.addEventListener('change', handleBackgroundUpload);
+
+      saveImageBtn.addEventListener('click', downloadCanvasImage);
+      saveLookBtn.addEventListener('click', saveLookToSavedLooks);
+    });
+  </script>
+</body>
+</html>

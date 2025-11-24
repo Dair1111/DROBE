@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scan Complete - DROBE</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background-color: white;
+      background-image: radial-gradient(circle, #555555 1px, transparent 1px);
+      background-size: 50px 50px;
+      background-attachment: fixed;
+      font-family: quasimoda, sans-serif;
+      font-style: normal;
+      font-weight: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .demo-container {
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .success-animation {
+      width: 80px;
+      height: 80px;
+      background: #111;
+      border-radius: 50%;
+      margin: 0 auto 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: scaleIn 0.5s ease-out;
+    }
+
+    .success-animation svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .demo-content {
+      background: white;
+      border: 1px solid #eee;
+      padding: 40px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 100;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+
+    .item-preview {
+      background: #f8f8f8;
+      padding: 25px;
+      margin: 25px 0;
+      border-radius: 4px;
+    }
+
+    .item-preview img {
+      max-width: 200px;
+      height: auto;
+      margin-bottom: 15px;
+    }
+
+    .item-details {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+    }
+
+    .item-details strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .demo-text {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+      margin: 25px 0;
+    }
+
+    .next-steps {
+      background: #f8f8f8;
+      padding: 20px;
+      margin: 25px 0;
+      border-left: 3px solid #111;
+    }
+
+    .next-steps h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+
+    .next-steps ul {
+      text-align: left;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .demo-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .primary-button {
+      background: #111;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-family: quasimoda, sans-serif;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      flex: 1;
+      transition: background 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .primary-button:hover {
+      background: #333;
+    }
+
+    .secondary-button {
+      background: transparent;
+      color: #111;
+      border: 1px solid #111;
+      padding: 14px 28px;
+      font-family: quasimoda, sans-serif;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      flex: 1;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .secondary-button:hover {
+      background: #111;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <div class="success-animation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M20 6L9 17l-5-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div class="demo-content">
+      <h1>Item Scanned</h1>
+      
+      <div class="item-preview">
+        <img id="itemImage" src="acc8.png" alt="Scanned Item">
+        <div class="item-details" id="itemDetails">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+      <p class="demo-text">
+        This item has been automatically added to your DROBE archive. The QR code recognized the brand and pre-filled all the details for you.
+      </p>
+
+      <div class="next-steps">
+        <h3>What happens next:</h3>
+        <ul>
+          <li>Item is now searchable in your digital closet</li>
+          <li>Create outfits with this item</li>
+          <li>Wear tracking and cost analysis</li>
+          <li>Sell this item to other users</li>
+        </ul>
+      </div>
+
+      <div class="demo-buttons">
+        <a href="index.html" class="primary-button">View in My Closet</a>
+        <a href="additem.html" class="secondary-button">Add Another Item</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Map brands/items to details
+    const itemDatabase = {
+      'aritzia': {
+        name: 'Cosmic Shift Hoodie',
+        category: 'Tops',
+        color: 'Heather Grey',
+        size: 'Medium',
+        price: '$98'
+      },
+      'levis': {
+        name: '501 Original Jeans',
+        category: 'Bottoms', 
+        color: 'Midnight Wash',
+        size: '32x32',
+        price: '$128'
+      },
+      'simuero': {
+        name: 'Corola E Talo Earrings',
+        category: 'Accessories',
+        color: 'Silver',
+        size: 'One Size',
+        price: '$245'
+      },
+      'arket': {
+        name: 'Wool Blend Dress',
+        category: 'Dresses',
+        color: 'Black',
+        size: 'Small',
+        price: '$320'
+      },
+      'nike': {
+        name: 'Air Force 1',
+        category: 'Shoes',
+        color: 'White',
+        size: 'US 9',
+        price: '$110'
+      },
+      'cos': {
+        name: 'Wool Overshirt',
+        category: 'Outerwears',
+        color: 'Camel',
+        size: 'Medium',
+        price: '$185'
+      },
+      'acnestudios': {
+        name: 'Leo Bag',
+        category: 'Bags',
+        color: 'Black',
+        size: 'One Size',
+        price: '$680'
+      }
+    };
+
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const brand = urlParams.get('brand') || 'simuero';
+    const customItem = urlParams.get('item');
+    const customCategory = urlParams.get('category');
+
+    // Find the item data
+    const itemData = itemDatabase[brand.toLowerCase()] || itemDatabase['simuero'];
+    
+    // Override with custom parameters if provided
+    if (customItem) itemData.name = customItem;
+    if (customCategory) itemData.category = customCategory;
+
+    // Update the page
+    document.getElementById('itemDetails').innerHTML = `
+      <strong>${itemData.name}</strong>
+      Brand: ${brand.charAt(0).toUpperCase() + brand.slice(1)}<br>
+      Category: ${itemData.category}<br>
+      Color: ${itemData.color}<br>
+      Size: ${itemData.size}<br>
+      Price: ${itemData.price}
+    `;
+
+    // Update page title
+    document.querySelector('h1').textContent = `${itemData.name} Added`;
+
+    // Add interactive feedback
+    document.querySelector('.primary-button').addEventListener('click', function(e) {
+      e.preventDefault();
+      this.textContent = 'Opening Archive...';
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

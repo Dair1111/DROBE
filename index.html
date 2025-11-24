@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DROBE – Wardrobe Grid</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background-color: white;
+      background-image:
+        radial-gradient(circle, #555555 1px, transparent 1px);
+      background-size: 50px 50px; /* space between dots */
+      background-attachment: fixed;
+
+      font-family: quasimoda, sans-serif;
+      font-style: normal;
+      font-weight: 100;
+    }
+
+    /* ====== TOP NAVBAR ====== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(6px);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 35px;
+    }
+
+.logo {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;   /* remove underline */
+  color: #111;             /* keep same color */
+}
+
+    nav ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .menu {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    /* Unified top-level menu items - applies to both main nav and account */
+    .menu > li,
+    .right-nav .account {
+      position: relative;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .menu > li > a,
+    .right-nav .account > a {
+      text-decoration: none;
+      color: #111;
+      padding: 4px 0;
+      display: inline-block;
+      border-bottom: 1px solid transparent;
+    }
+
+    .menu > li > a:hover,
+    .right-nav .account > a:hover {
+      border-bottom-color: #111;
+    }
+
+    /* Dropdown base */
+    .submenu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 180px;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 8px 0;
+      margin: 0;
+      display: none;
+      z-index: 1100;
+      list-style: none;
+    }
+
+    .submenu li {
+      position: relative;
+      font-size: 12px;
+      text-transform: none;
+      letter-spacing: 0.04em;
+      padding: 4px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      list-style: none;
+    }
+
+    .submenu li a {
+      text-decoration: none;
+      color: #111;
+      display: block;
+      padding: 4px 0;
+    }
+
+    .submenu li:hover {
+      background: #f3f3f3;
+    }
+
+    /* Show first-level submenu on hover OR while focused */
+    .menu > li:hover > .submenu,
+    .menu > li:focus-within > .submenu {
+      display: block;
+    }
+
+    /* Nested submenu (for Category, Saved looks) */
+    .submenu .submenu {
+      top: 0;
+      left: 100%;
+      margin-left: 4px;
+    }
+
+    .submenu li:hover > .submenu,
+    .submenu li:focus-within > .submenu {
+      display: block;
+    }
+
+    /* Account section on the right */
+    .right-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .right-nav .account {
+      position: relative;
+    }
+
+    .right-nav .account .submenu {
+      right: 0;
+      left: auto;
+    }
+
+    .right-nav .account:hover .submenu,
+    .right-nav .account:focus-within .submenu {
+      display: block;
+    }
+
+    /* ====== GALLERY ====== */
+    .gallery {
+      padding: 35px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);  /* 7 image columns */
+      column-gap: 120px;                      /* gutter between columns*/
+      row-gap: 150px;                         /* vertical distance between rows */
+    }
+
+    .gallery img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery img:hover {
+      transform: scale(1.05);
+    }
+
+    /* ====== WHAT-IF BADGE ====== */
+    .whatif-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .whatif-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-top: 12px solid rgba(0, 0, 0, 0.75); /* dark triangle */
+      border-left: 12px solid transparent;
+      z-index: 5;
+    }
+
+    /* Shuffle button */
+    .shuffle-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #111;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-family: quasimoda, sans-serif;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      z-index: 100;
+      transition: background 0.3s ease;
+    }
+
+    .shuffle-btn:hover {
+      background: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVBAR -->
+  <header>
+    <div class="nav-inner">
+<a href="index.html" class="logo">DROBE</a>
+
+      <nav>
+        <ul class="menu">
+          <!-- BROWSE -->
+          <li>
+            <a href="#">Browse</a>
+            <ul class="submenu">
+              <li>
+                <a href="#" class="category-link" data-category="all">All</a>
+              </li>
+              <li>
+                Category
+                <ul class="submenu">
+                  <li><a href="#" class="category-link" data-category="tops">Tops</a></li>
+                  <li><a href="#" class="category-link" data-category="outerwears">Outerwears</a></li>
+                  <li><a href="#" class="category-link" data-category="bottoms">Bottoms</a></li>
+                  <li><a href="#" class="category-link" data-category="dresses">Dresses</a></li>
+                  <li><a href="#" class="category-link" data-category="shoes">Shoes</a></li>
+                  <li><a href="#" class="category-link" data-category="accessories">Accessories</a></li>
+                  <li><a href="#" class="category-link" data-category="bags">Bags</a></li>
+                  <li><a href="#" class="category-link" data-category="whatifs">What ifs</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <!-- PAIR -->
+          <li>
+            <a href="#">Pair</a>
+            <ul class="submenu">
+              <li><a href="scroll&select.html">Scroll &amp; Select</a></li>
+              <li><a href="Layer&Preview.html">Layer &amp; Preview</a></li>
+            </ul>
+          </li>
+
+          <!-- PLAN -->
+          <li>
+            <a href="#">Plan</a>
+            <ul class="submenu">
+              <li>
+                <a href="#">Saved looks</a>
+                <ul class="submenu">
+                  <li><a href="savedlooks.html">Mine</a></li>
+                  <li><a href="#">Others / Inspirations</a></li>
+                </ul>
+              </li>
+              <li><a href="#">Calendar</a></li>
+            </ul>
+          </li>
+
+          <!-- ADD -->
+          <li>
+            <a href="#">Add</a>
+            <ul class="submenu">
+              <li><a href="additem.html">Upload</a></li>
+              <li><a href="#">Shop</a></li>
+            </ul>
+          </li>
+
+          <!-- ANALYSIS -->
+          <li>
+            <a href="#">Analysis</a>
+            <ul class="submenu">
+              <li><a href="#">Overview</a></li>
+              <li><a href="#">Wear Frequency / Unworn Items</a></li>
+              <li><a href="#">Spending</a></li>
+            </ul>
+          </li>
+
+          <!-- EXPLORE -->
+          <li>
+            <a href="#">Explore</a>
+            <ul class="submenu">
+              <li><a href="#">Sell / Explore / Buy</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="right-nav">
+        <div class="account">
+          <a href="#">Account</a>
+          <ul class="submenu">
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Help &amp; Feedback</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <div class="gallery" id="gallery">
+    <!-- All items will be dynamically added here -->
+  </div>
+
+  <!-- Shuffle Button -->
+  <button class="shuffle-btn" id="shuffleBtn">Shuffle Items</button>
+
+  <script>
+    // Fisher-Yates shuffle
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    // Category image storage
+    const categories = {
+      all: [],
+      tops: [],
+      outerwears: [],
+      bottoms: [],
+      dresses: [],
+      shoes: [],
+      accessories: [],
+      bags: [],
+      whatifs: []
+    };
+
+    // Build image HTML strings and assign to categories
+    function buildImages() {
+      // Tops (24 items)
+      for (let i = 1; i <= 24; i++) {
+        const img = `<img src="top${i}.png" alt="Top ${i}">`;
+        categories.all.push(img);
+        categories.tops.push(img);
+      }
+
+      // Outerwears (19 items)
+      for (let i = 1; i <= 19; i++) {
+        const img = `<img src="outerwear${i}.png" alt="Outerwear ${i}">`;
+        categories.all.push(img);
+        categories.outerwears.push(img);
+      }
+
+      // Bottoms (37 items)
+      for (let i = 1; i <= 37; i++) {
+        const img = `<img src="bottom${i}.png" alt="Bottom ${i}">`;
+        categories.all.push(img);
+        categories.bottoms.push(img);
+      }
+
+      // Dresses (23 items)
+      for (let i = 1; i <= 23; i++) {
+        const img = `<img src="dress${i}.png" alt="Dress ${i}">`;
+        categories.all.push(img);
+        categories.dresses.push(img);
+      }
+
+      // Shoes (21 items)
+      for (let i = 1; i <= 21; i++) {
+        const img = `<img src="shoe${i}.png" alt="Shoe ${i}">`;
+        categories.all.push(img);
+        categories.shoes.push(img);
+      }
+
+      // Accessories (28 items)
+      for (let i = 1; i <= 28; i++) {
+        let img;
+        if (i === 8) {
+          // acc8 links to the earring receipt page
+          img = `<a href="earing(reciept).html"><img src="acc8.png" alt="Accessory 8"></a>`;
+        } else {
+          img = `<img src="acc${i}.png" alt="Accessory ${i}">`;
+        }
+        categories.all.push(img);
+        categories.accessories.push(img);
+      }
+
+      // Bags (23 items)
+      for (let i = 1; i <= 23; i++) {
+        const img = `<img src="bag${i}.png" alt="Bag ${i}">`;
+        categories.all.push(img);
+        categories.bags.push(img);
+      }
+
+      // What ifs (15 items) with corner badge
+      for (let i = 1; i <= 15; i++) {
+        const img = `
+          <div class="whatif-wrapper">
+            <div class="whatif-badge"></div>
+            <img src="if${i}.png" alt="What if ${i}">
+          </div>
+        `;
+        categories.all.push(img);
+        categories.whatifs.push(img);
+      }
+    }
+
+    const gallery = document.getElementById('gallery');
+    let currentCategory = 'all';
+
+    // Render a given category
+    function renderCategory(categoryKey, shuffle = false) {
+      const imgs = categories[categoryKey] || categories.all;
+      const toRender = shuffle ? shuffleArray([...imgs]) : imgs;
+      gallery.innerHTML = toRender.join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Build all category arrays
+      buildImages();
+
+      // Initial view: all items, shuffled
+      renderCategory('all', true);
+
+      // Category link behaviour
+      const categoryLinks = document.querySelectorAll('.category-link');
+      categoryLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const cat = this.dataset.category || 'all';
+          currentCategory = cat;
+          renderCategory(cat, true); // shuffle when switching category
+        });
+      });
+
+      // Shuffle current category
+      document.getElementById('shuffleBtn').addEventListener('click', function() {
+        renderCategory(currentCategory, true);
+      });
+    });
+  </script>
+</body>
+</html>

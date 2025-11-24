@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DROBE – Scroll & Select</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background-color: white;
+      background-image:
+        radial-gradient(circle, #555555 1px, transparent 1px);
+      background-size: 50px 50px; /* space between dots */
+      background-attachment: fixed;
+      font-family: quasimoda, sans-serif;
+      font-style: normal;
+      font-weight: 100;
+      color: #111;
+    }
+    /* ====== TOP NAVBAR (same as home) ====== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(6px);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 35px;
+    }
+    .logo {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    nav ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .menu {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+    .menu > li {
+      position: relative;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .menu > li > a {
+      text-decoration: none;
+      color: #111;
+      padding: 4px 0;
+      display: inline-block;
+      border-bottom: 1px solid transparent;
+    }
+    .menu > li > a:hover {
+      border-bottom-color: #111;
+    }
+    /* Dropdown base */
+    .submenu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 180px;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 8px 0;
+      margin: 0;
+      display: none;
+      z-index: 1100;
+      list-style: none;
+    }
+    .submenu li {
+      position: relative;
+      font-size: 12px;
+      text-transform: none;
+      letter-spacing: 0.04em;
+      padding: 4px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      list-style: none;
+    }
+    .submenu li a {
+      text-decoration: none;
+      color: #111;
+      display: block;
+      padding: 4px 0;
+    }
+    .submenu li:hover {
+      background: #f3f3f3;
+    }
+    .menu > li:hover > .submenu {
+      display: block;
+    }
+    .submenu .submenu {
+      top: 0;
+      left: 100%;
+      margin-left: 4px;
+    }
+    .submenu li:hover > .submenu {
+      display: block;
+    }
+    /* Account section on the right */
+    .right-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .right-nav .account {
+      position: relative;
+      cursor: pointer;
+    }
+    .right-nav .account > a {
+      text-decoration: none;
+      color: #111;
+      padding: 4px 0;
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 13px;
+      border-bottom: 1px solid transparent;
+    }
+    .right-nav .account > a:hover {
+      border-bottom-color: #111;
+    }
+    .right-nav .account .submenu {
+      right: 0;
+      left: auto;
+    }
+    .right-nav .account:hover .submenu {
+      display: block;
+    }
+    /* ====== CONTROLS: RANDOM + ADD COLUMN ====== */
+    .controls-row {
+      padding: 8px 35px 0 35px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn {
+      border: 1px solid #111;
+      background: #fff;
+      padding: 6px 12px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    .btn:hover {
+      background: #111;
+      color: #fff;
+    }
+    .add-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    .add-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ddd;
+      margin-top: 4px;
+      padding: 4px 0;
+      min-width: 180px;
+      display: none;
+      z-index: 1200;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .add-wrapper.open .add-menu {
+      display: block;
+    }
+    .add-menu button {
+      width: 100%;
+      border: none;
+      background: #fff;
+      text-align: left;
+      padding: 4px 16px;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: none;
+      cursor: pointer;
+    }
+    .add-menu button:hover {
+      background: #f3f3f3;
+    }
+    /* ====== MAIN / COLUMNS ====== */
+    main {
+      padding-bottom: 35px;
+    }
+    .columns-wrapper {
+      padding: 24px 65px 0px 65px;
+      display: flex;
+      gap: 40px;              /* wider gap between columns */
+      align-items: flex-start;
+    }
+    .column {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 140px);
+      position: relative;
+      flex: 1 1 0;            /* fill the row */
+      min-width: 150px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #e3e3e3;
+      border-radius: 4px;
+      padding: 10px 10px 12px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.04);
+    }
+    .column.only-image {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+    }
+    .column.only-image .column-scroll {
+      padding-top: 0;
+    }
+    .column-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0 2px 6px;
+      border-bottom: 1px dashed #ddd;
+      gap: 4px;
+    }
+    .column-header::before {
+      content: "CATEGORY";
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #888;
+    }
+    /* ====== CATEGORY SELECT ====== */
+    .category-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: none;
+      color: #111;
+      border-radius: 2px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .category-wrapper:hover {
+      background: #f8f8f8;
+      border-color: #cfcfcf;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    }
+    .category-trigger {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      flex: 1;
+      padding: 2px 0;
+      font-size: 11px;
+      letter-spacing: inherit;
+      text-transform: none;
+      white-space: nowrap;
+      text-align: left;
+      font-family: quasimoda, sans-serif !important;
+      font-weight: 150 !important;
+      color: #111;
+    }
+    .category-trigger::after {
+      content: "▾";
+      font-size: 9px;
+      margin-left: 6px;
+    }
+    .remove-btn {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 2px 0 2px 8px;
+      font-size: 11px;
+      line-height: 1;
+      color: #999;
+    }
+    .remove-btn:hover {
+      color: #111;
+    }
+    .category-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;          /* same width as the category box */
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 4px 0;
+      margin: 4px 0 0 0;
+      list-style: none;
+      z-index: 1300;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .category-menu li {
+      font-size: 11px;
+      text-transform: none;
+      letter-spacing: 0.06em;
+      padding: 4px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      color: #111;
+    }
+    .category-menu li:hover {
+      background: #f3f3f3;
+    }
+    .category-wrapper.open {
+      border-color: #111;
+      background: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+    .category-wrapper.open .category-menu {
+      display: block;
+    }
+    .column.frozen .category-wrapper {
+      background: #fff;
+      border-color: #ddd;
+    }
+    .column.frozen .category-wrapper .category-trigger,
+    .column.frozen .category-wrapper .remove-btn {
+      color: #111;
+    }
+    .column-scroll {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      padding: 20px 2px 20px;
+      scrollbar-width: none;
+    }
+    .column-scroll::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+    .column-scroll img {
+      width: 80%;
+      height: auto;
+      display: block;
+      background: transparent;
+      cursor: pointer;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+      margin: 0 auto;
+    }
+    .column.frozen .column-scroll {
+      overflow-y: hidden;
+    }
+    .locked-badge {
+      display: none;
+    }
+    @media (max-width: 1000px) {
+      .columns-wrapper {
+        gap: 24px;
+        padding-inline: 35px;
+      }
+    }
+    @media (max-width: 768px) {
+      .columns-wrapper {
+        flex-direction: column;
+      }
+      .column {
+        flex: 1 1 auto;
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- TOP NAVBAR -->
+  <header>
+    <div class="nav-inner">
+      <div class="logo">DROBE</div>
+      <nav>
+        <ul class="menu">
+          <!-- BROWSE -->
+          <li>
+            <a href="index.html">Browse</a>
+            <ul class="submenu">
+              <li><a href="#">All</a></li>
+              <li>
+                Category
+                <ul class="submenu">
+                  <li><a href="#">Tops</a></li>
+                  <li><a href="#">Outerwears</a></li>
+                  <li><a href="#">Dresses</a></li>
+                  <li><a href="#">Bottoms</a></li>
+                  <li><a href="#">Shoes</a></li>
+                  <li><a href="#">Accessories</a></li>
+                  <li><a href="#">Bags</a></li>
+                  <li><a href="#">What ifs</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <!-- PAIR -->
+          <li>
+            <a href="#">Pair</a>
+            <ul class="submenu">
+              <li><a href="scroll&select.html">Scroll &amp; Select</a></li>
+              <li><a href="layer&preview.html">Layer &amp; Preview</a></li>
+            </ul>
+          </li>
+          <!-- PLAN -->
+          <li>
+            <a href="#">Plan</a>
+            <ul class="submenu">
+              <li>
+                <a href="#">Saved looks</a>
+                <ul class="submenu">
+                  <li><a href="savedlooks.html">Mine</a></li>
+                  <li><a href="#">Others / Inspirations</a></li>
+                </ul>
+              </li>
+              <li><a href="#">Calendar</a></li>
+            </ul>
+          </li>
+          <!-- ADD -->
+          <li>
+            <a href="#">Add</a>
+            <ul class="submenu">
+              <li><a href="additem.html">Upload</a></li>
+              <li><a href="#">Shop</a></li>
+            </ul>
+          </li>
+          <!-- ANALYSIS -->
+          <li>
+            <a href="#">Analysis</a>
+            <ul class="submenu">
+              <li><a href="#">Overview</a></li>
+              <li><a href="#">Wear Frequency / Unworn Items</a></li>
+              <li><a href="#">Spending</a></li>
+            </ul>
+          </li>
+          <!-- EXPLORE -->
+          <li>
+            <a href="#">Explore</a>
+            <ul class="submenu">
+              <li><a href="#">Sell / Explore / Buy</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <div class="right-nav">
+        <div class="account">
+          <a href="#">Account</a>
+          <ul class="submenu">
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Help &amp; Feedback</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTROLS ROW -->
+  <div class="controls-row">
+    <button class="btn" id="randomOutfitBtn">Random</button>
+    <div class="add-wrapper" id="addWrapper">
+      <button class="btn" id="add-column-trigger">+ Add column</button>
+      <div class="add-menu" id="addMenu">
+        <button data-category="tops">Tops</button>
+        <button data-category="outerwears">Outerwears</button>
+        <button data-category="dresses">Dresses</button>
+        <button data-category="bottoms">Bottoms</button>
+        <button data-category="shoes">Shoes</button>
+        <button data-category="accessories">Accessories</button>
+        <button data-category="bags">Bags</button>
+        <button data-category="whatifs">What ifs</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN TOOL AREA -->
+  <main>
+    <div class="columns-wrapper" id="columnsWrapper">
+      <!-- Columns injected by JS -->
+    </div>
+  </main>
+
+  <script>
+    // Category configuration based on your filenames
+    const categories = {
+      tops:        { label: "Tops",        prefix: "top",       count: 24 },
+      outerwears:  { label: "Outerwears",  prefix: "outerwear", count: 19 },
+      dresses:     { label: "Dresses",     prefix: "dress",     count: 23 },
+      bottoms:     { label: "Bottoms",     prefix: "bottom",    count: 37 },
+      shoes:       { label: "Shoes",       prefix: "shoe",      count: 21 },
+      accessories: { label: "Accessories", prefix: "acc",       count: 28 },
+      bags:        { label: "Bags",        prefix: "bag",       count: 23 },
+      whatifs:     { label: "What ifs",    prefix: "if",        count: 15 }
+    };
+    const categoryOrder = [
+      "tops",
+      "outerwears",
+      "dresses",
+      "bottoms",
+      "shoes",
+      "accessories",
+      "bags",
+      "whatifs"
+    ];
+    const columnsWrapper = document.getElementById("columnsWrapper");
+    const addMenu = document.getElementById("addMenu");
+    const addWrapper = document.getElementById("addWrapper");
+    const addTrigger = document.getElementById("add-column-trigger");
+    const randomOutfitBtn = document.getElementById("randomOutfitBtn");
+
+    function populateColumnImages(columnScrollEl, categoryKey) {
+      const config = categories[categoryKey];
+      columnScrollEl.innerHTML = "";
+      // invisible spacers at top & bottom to allow centering of first/last items
+      const topSpacer = document.createElement("div");
+      topSpacer.style.height = "320px";
+      topSpacer.style.pointerEvents = "none";
+      const bottomSpacer = document.createElement("div");
+      bottomSpacer.style.height = "320px";
+      bottomSpacer.style.pointerEvents = "none";
+      columnScrollEl.appendChild(topSpacer);
+      for (let i = 1; i <= config.count; i++) {
+        const img = document.createElement("img");
+        img.src = `${config.prefix}${i}.png`;
+        img.alt = `${config.label} ${i}`;
+        columnScrollEl.appendChild(img);
+      }
+      columnScrollEl.appendChild(bottomSpacer);
+    }
+
+    function closeAllCategoryMenus() {
+      document
+        .querySelectorAll(".category-wrapper.open")
+        .forEach(wrapper => wrapper.classList.remove("open"));
+    }
+
+    function closeAddMenu() {
+      addWrapper.classList.remove("open");
+    }
+
+    function clearSelectionInColumn(column, scrollArea, header) {
+      const allImgs = scrollArea.querySelectorAll("img");
+      allImgs.forEach(img => {
+        img.classList.remove("active-item");
+        img.style.opacity = "1";
+      });
+      column.classList.remove("frozen", "only-image");
+      header.style.display = "";
+      scrollArea.style.overflowY = "auto";
+    }
+
+    function selectImageInColumn(column, header, scrollArea, clicked) {
+      const allImgs = scrollArea.querySelectorAll("img");
+      allImgs.forEach(img => {
+        img.classList.remove("active-item");
+        img.style.opacity = "1";
+      });
+      clicked.classList.add("active-item");
+      allImgs.forEach(img => {
+        img.style.opacity = (img === clicked) ? "1" : "0";
+      });
+      const itemTop = clicked.offsetTop;
+      const itemHeight = clicked.clientHeight;
+      const viewHeight = scrollArea.clientHeight;
+      const anchorOffset = (viewHeight - itemHeight) / 2;
+      let targetScroll = itemTop - anchorOffset;
+      const maxScroll = scrollArea.scrollHeight - viewHeight;
+      if (targetScroll < 0) targetScroll = 0;
+      if (targetScroll > maxScroll) targetScroll = maxScroll;
+      scrollArea.scrollTop = targetScroll;
+      column.classList.add("frozen", "only-image");
+      header.style.display = "none";
+      setTimeout(() => {
+        if (column.classList.contains("frozen")) {
+          scrollArea.style.overflowY = "hidden";
+        }
+      }, 220);
+    }
+
+    function alignSelectedAcrossColumns() {
+      const cols = columnsWrapper.querySelectorAll(".column");
+      cols.forEach(column => {
+        const scrollArea = column.querySelector(".column-scroll");
+        const active = scrollArea.querySelector("img.active-item");
+        if (!active) return;
+        const itemTop = active.offsetTop;
+        const itemHeight = active.clientHeight;
+        const viewHeight = scrollArea.clientHeight;
+        const anchorOffset = (viewHeight - itemHeight) / 2;
+        let targetScroll = itemTop - anchorOffset;
+        const maxScroll = scrollArea.scrollHeight - viewHeight;
+        if (targetScroll < 0) targetScroll = 0;
+        if (targetScroll > maxScroll) targetScroll = maxScroll;
+        scrollArea.scrollTop = targetScroll;
+      });
+    }
+
+    function createColumn(initialCategoryKey = "tops") {
+      let currentCategoryKey = initialCategoryKey;
+      const column = document.createElement("div");
+      column.className = "column";
+      const header = document.createElement("div");
+      header.className = "column-header";
+      const categoryWrapper = document.createElement("div");
+      categoryWrapper.className = "category-wrapper";
+      const trigger = document.createElement("button");
+      trigger.type = "button";
+      trigger.className = "category-trigger";
+      trigger.textContent = categories[currentCategoryKey].label;
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "remove-btn";
+      removeBtn.title = "Remove this column";
+      removeBtn.textContent = "✕";
+      const categoryMenu = document.createElement("ul");
+      categoryMenu.className = "category-menu";
+      categoryOrder.forEach(key => {
+        const li = document.createElement("li");
+        li.textContent = categories[key].label;
+        li.dataset.category = key;
+        categoryMenu.appendChild(li);
+      });
+      categoryWrapper.appendChild(trigger);
+      categoryWrapper.appendChild(removeBtn);
+      categoryWrapper.appendChild(categoryMenu);
+      header.appendChild(categoryWrapper);
+      const scrollArea = document.createElement("div");
+      scrollArea.className = "column-scroll";
+      const lockedBadge = document.createElement("div");
+      lockedBadge.className = "locked-badge";
+      lockedBadge.textContent = "LOCKED";
+      column.appendChild(header);
+      column.appendChild(scrollArea);
+      column.appendChild(lockedBadge);
+      populateColumnImages(scrollArea, currentCategoryKey);
+
+      // Toggle category dropdown
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = categoryWrapper.classList.contains("open");
+        closeAllCategoryMenus();
+        if (!isOpen) {
+          categoryWrapper.classList.add("open");
+        }
+      });
+
+      // Category selection from custom menu
+      categoryMenu.addEventListener("click", (e) => {
+        if (e.target.tagName.toLowerCase() !== "li") return;
+        const newKey = e.target.dataset.category;
+        if (!newKey || newKey === currentCategoryKey) {
+          categoryWrapper.classList.remove("open");
+          return;
+        }
+        currentCategoryKey = newKey;
+        trigger.textContent = categories[newKey].label;
+        populateColumnImages(scrollArea, currentCategoryKey);
+        clearSelectionInColumn(column, scrollArea, header);
+        categoryWrapper.classList.remove("open");
+        e.stopPropagation();
+      });
+
+      // Image selection per column
+      scrollArea.addEventListener("click", (e) => {
+        if (e.target.tagName.toLowerCase() !== "img") return;
+        const clicked = e.target;
+        const alreadyActive = clicked.classList.contains("active-item");
+        if (alreadyActive) {
+          clearSelectionInColumn(column, scrollArea, header);
+          return;
+        }
+        selectImageInColumn(column, header, scrollArea, clicked);
+        alignSelectedAcrossColumns();
+      });
+
+      removeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        columnsWrapper.removeChild(column);
+      });
+
+      return column;
+    }
+
+    // Add-column menu
+    addTrigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = addWrapper.classList.contains("open");
+      if (isOpen) {
+        closeAddMenu();
+      } else {
+        closeAllCategoryMenus();
+        addWrapper.classList.add("open");
+      }
+    });
+
+    addMenu.addEventListener("click", (e) => {
+      if (e.target.tagName.toLowerCase() !== "button") return;
+      const catKey = e.target.getAttribute("data-category");
+      const col = createColumn(catKey || "tops");
+      columnsWrapper.appendChild(col);
+      closeAddMenu();
+    });
+
+    // Random outfit button
+    randomOutfitBtn.addEventListener("click", () => {
+      const cols = columnsWrapper.querySelectorAll(".column");
+      cols.forEach(column => {
+        const header = column.querySelector(".column-header");
+        const scrollArea = column.querySelector(".column-scroll");
+        const imgs = scrollArea.querySelectorAll("img");
+        if (!imgs.length) return;
+        const randomIndex = Math.floor(Math.random() * imgs.length);
+        const chosen = imgs[randomIndex];
+        selectImageInColumn(column, header, scrollArea, chosen);
+      });
+      alignSelectedAcrossColumns();
+    });
+
+    // Close menus on outside click
+    document.addEventListener("click", () => {
+      closeAllCategoryMenus();
+      closeAddMenu();
+    });
+
+    // Default 5 columns
+    const initialCategories = ["tops", "bottoms", "shoes", "accessories", "bags"];
+    initialCategories.forEach(catKey => {
+      const col = createColumn(catKey);
+      columnsWrapper.appendChild(col);
+    });
+  </script>
+</body>
+</html>

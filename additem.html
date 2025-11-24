@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Item - DROBE</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background-color: white;
+      background-image: radial-gradient(circle, #555555 1px, transparent 1px);
+      background-size: 50px 50px;
+      background-attachment: fixed;
+      font-family: quasimoda, sans-serif;
+      font-style: normal;
+      font-weight: 100;
+    }
+
+    /* ====== TOP NAVBAR ====== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(6px);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 35px;
+    }
+
+    .logo {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    nav ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .menu {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .menu > li,
+    .right-nav .account {
+      position: relative;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .menu > li > a,
+    .right-nav .account > a {
+      text-decoration: none;
+      color: #111;
+      padding: 4px 0;
+      display: inline-block;
+      border-bottom: 1px solid transparent;
+    }
+
+    .menu > li > a:hover,
+    .right-nav .account > a:hover {
+      border-bottom-color: #111;
+    }
+
+    .submenu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 180px;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 8px 0;
+      margin: 0;
+      display: none;
+      z-index: 1100;
+      list-style: none;
+    }
+
+    .submenu li {
+      position: relative;
+      font-size: 12px;
+      text-transform: none;
+      letter-spacing: 0.04em;
+      padding: 4px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      list-style: none;
+    }
+
+    .submenu li a {
+      text-decoration: none;
+      color: #111;
+      display: block;
+      padding: 4px 0;
+    }
+
+    .submenu li:hover {
+      background: #f3f3f3;
+    }
+
+    .menu > li:hover > .submenu,
+    .menu > li:focus-within > .submenu {
+      display: block;
+    }
+
+    .submenu .submenu {
+      top: 0;
+      left: 100%;
+      margin-left: 4px;
+    }
+
+    .submenu li:hover > .submenu,
+    .submenu li:focus-within > .submenu {
+      display: block;
+    }
+
+    .right-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .right-nav .account {
+      position: relative;
+    }
+
+    .right-nav .account .submenu {
+      right: 0;
+      left: auto;
+    }
+
+    .right-nav .account:hover .submenu,
+    .right-nav .account:focus-within .submenu {
+      display: block;
+    }
+
+    /* QR Scanner Specific Styles */
+    .scanner-container {
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 0 35px;
+    }
+
+    .scanner-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .scanner-header h1 {
+      font-size: 24px;
+      font-weight: 100;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .scanner-header p {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+    }
+
+    .scanner-box {
+      background: white;
+      border: 1px solid #eee;
+      padding: 30px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .scanner-placeholder {
+      width: 200px;
+      height: 200px;
+      background: #f8f8f8;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px dashed #ddd;
+    }
+
+    .scanner-placeholder svg {
+      width: 60px;
+      height: 60px;
+      opacity: 0.3;
+    }
+
+    .scan-button {
+      background: #111;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-family: quasimoda, sans-serif;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s ease;
+    }
+
+    .scan-button:hover {
+      background: #333;
+    }
+
+    .manual-entry {
+      background: white;
+      border: 1px solid #eee;
+      padding: 30px;
+    }
+
+    .manual-entry h3 {
+      font-size: 14px;
+      font-weight: 100;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      color: #666;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      background: white;
+      font-family: quasimoda, sans-serif;
+      font-size: 14px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .secondary-button {
+      background: transparent;
+      color: #111;
+      border: 1px solid #111;
+      padding: 14px 28px;
+      font-family: quasimoda, sans-serif;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      flex: 1;
+      transition: all 0.3s ease;
+    }
+
+    .secondary-button:hover {
+      background: #111;
+      color: white;
+    }
+
+    .preview-item {
+      text-align: center;
+      margin: 30px 0;
+      padding: 20px;
+      background: #f8f8f8;
+      border-radius: 4px;
+    }
+
+    .preview-item img {
+      max-width: 150px;
+      height: auto;
+      margin-bottom: 15px;
+    }
+
+    .brand-prefill {
+      background: #f0f0f0;
+      padding: 10px 15px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .scanner-instruction {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* Camera scanner styles */
+    #camera-scanner {
+      width: 100%;
+      max-width: 300px;
+      height: 300px;
+      margin: 0 auto 20px;
+      background: #000;
+      position: relative;
+    }
+
+    .scanner-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 2px solid white;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+    }
+
+    .scanner-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- TOP NAVBAR -->
+  <header>
+    <div class="nav-inner">
+      <div class="logo">DROBE</div>
+
+      <nav>
+        <ul class="menu">
+          <!-- BROWSE -->
+          <li>
+            <a href="index.html">Browse</a>
+            <ul class="submenu">
+              <li>
+                <a href="index.html" class="category-link" data-category="all">All</a>
+              </li>
+              <li>
+                Category
+                <ul class="submenu">
+                  <li><a href="index.html" class="category-link" data-category="tops">Tops</a></li>
+                  <li><a href="index.html" class="category-link" data-category="outerwears">Outerwears</a></li>
+                  <li><a href="index.html" class="category-link" data-category="bottoms">Bottoms</a></li>
+                  <li><a href="index.html" class="category-link" data-category="dresses">Dresses</a></li>
+                  <li><a href="index.html" class="category-link" data-category="shoes">Shoes</a></li>
+                  <li><a href="index.html" class="category-link" data-category="accessories">Accessories</a></li>
+                  <li><a href="index.html" class="category-link" data-category="bags">Bags</a></li>
+                  <li><a href="index.html" class="category-link" data-category="whatifs">What ifs</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <!-- PAIR -->
+          <li>
+            <a href="#">Pair</a>
+            <ul class="submenu">
+              <li><a href="#">Scroll &amp; Select</a></li>
+              <li><a href="#">Layer &amp; Preview</a></li>
+            </ul>
+          </li>
+
+          <!-- PLAN -->
+          <li>
+            <a href="#">Plan</a>
+            <ul class="submenu">
+              <li>
+                Saved looks
+                <ul class="submenu">
+                  <li><a href="#">Mine</a></li>
+                  <li><a href="#">Others / Inspirations</a></li>
+                </ul>
+              </li>
+              <li><a href="#">Calendar</a></li>
+            </ul>
+          </li>
+
+          <!-- ADD -->
+          <li>
+            <a href="additem.html">Add</a>
+            <ul class="submenu">
+              <li><a href="additem.html">Upload</a></li>
+              <li><a href="#">Shop</a></li>
+            </ul>
+          </li>
+
+          <!-- ANALYSIS -->
+          <li>
+            <a href="#">Analysis</a>
+            <ul class="submenu">
+              <li><a href="#">Overview</a></li>
+              <li><a href="#">Wear Frequency / Unworn Items</a></li>
+              <li><a href="#">Spending</a></li>
+            </ul>
+          </li>
+
+          <!-- EXPLORE -->
+          <li>
+            <a href="#">Explore</a>
+            <ul class="submenu">
+              <li><a href="#">Sell / Explore / Buy</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="right-nav">
+        <div class="account">
+          <a href="#">Account</a>
+          <ul class="submenu">
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Help &amp; Feedback</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SCANNER CONTENT -->
+  <div class="scanner-container">
+    <div class="scanner-header">
+      <h1>Add to Archive</h1>
+      <p>Scan your garment tag or enter details manually</p>
+    </div>
+
+    <!-- Brand prefill notification -->
+    <div class="brand-prefill" id="brandPrefill">
+      <!-- This will be populated by JavaScript -->
+    </div>
+
+    <!-- QR Scanner Section -->
+    <div class="scanner-box">
+      <div id="camera-scanner" style="display: none;">
+        <div class="scanner-overlay"></div>
+      </div>
+      
+      <div id="scanner-placeholder" class="scanner-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M3 9V7a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2M7 22H5a2 2 0 01-2-2v-2m10-14v4a2 2 0 01-2 2h-4a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2z"/>
+        </svg>
+      </div>
+      
+      <button class="scan-button" id="startScanner">
+        Scan Garment Tag
+      </button>
+      
+      <div class="scanner-instruction">
+        Point camera at QR code on your garment tag
+      </div>
+      
+      <div class="scanner-actions" id="scannerActions" style="display: none;">
+        <button class="secondary-button" id="cancelScan">
+          Cancel
+        </button>
+        <button class="secondary-button" id="uploadImage">
+          Upload Photo Instead
+        </button>
+      </div>
+    </div>
+
+    <!-- Manual Entry Form -->
+    <div class="manual-entry">
+      <h3>Or Enter Manually</h3>
+      
+      <form id="itemForm">
+        <div class="form-group">
+          <label for="itemImage">Item Photo</label>
+          <input type="file" id="itemImage" accept="image/*" capture="environment">
+        </div>
+
+        <div class="form-group">
+          <label for="brand">Brand</label>
+          <input type="text" id="brand" placeholder="Enter brand name">
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category">
+            <option value="">Select category</option>
+            <option value="tops">Tops</option>
+            <option value="outerwears">Outerwears</option>
+            <option value="bottoms">Bottoms</option>
+            <option value="dresses">Dresses</option>
+            <option value="shoes">Shoes</option>
+            <option value="accessories">Accessories</option>
+            <option value="bags">Bags</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <input type="text" id="description" placeholder="Brief description (color, style, etc.)">
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Tags</label>
+          <input type="text" id="tags" placeholder="Add tags separated by commas">
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="secondary-button" onclick="window.location.href='index.html'">
+            Back to Archive
+          </button>
+          <button type="submit" class="scan-button">
+            Add to Closet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Get URL parameters for pre-filled data
+    const urlParams = new URLSearchParams(window.location.search);
+    const prefillBrand = urlParams.get('brand');
+    const prefillCategory = urlParams.get('category');
+
+    // Update brand prefill notification
+    const brandPrefill = document.getElementById('brandPrefill');
+    if (prefillBrand) {
+      brandPrefill.textContent = `Detected brand: ${prefillBrand}`;
+      document.getElementById('brand').value = prefillBrand;
+    } else {
+      brandPrefill.style.display = 'none';
+    }
+
+    // Pre-fill category if provided
+    if (prefillCategory) {
+      document.getElementById('category').value = prefillCategory;
+    }
+
+    // Scanner functionality
+    const startScanner = document.getElementById('startScanner');
+    const scannerPlaceholder = document.getElementById('scanner-placeholder');
+    const cameraScanner = document.getElementById('camera-scanner');
+    const scannerActions = document.getElementById('scannerActions');
+    const cancelScan = document.getElementById('cancelScan');
+    const uploadImage = document.getElementById('uploadImage');
+
+    let stream = null;
+
+    startScanner.addEventListener('click', async function() {
+      try {
+        // Hide placeholder, show camera and actions
+        scannerPlaceholder.style.display = 'none';
+        cameraScanner.style.display = 'block';
+        scannerActions.style.display = 'flex';
+        startScanner.style.display = 'none';
+
+        // Access camera
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.autoplay = true;
+        video.playsInline = true;
+        
+        cameraScanner.appendChild(video);
+
+        // Here you would integrate with a QR scanning library
+        setTimeout(simulateQRDetection, 2000);
+
+      } catch (err) {
+        console.error('Error accessing camera:', err);
+        alert('Unable to access camera. Please check permissions.');
+        resetScanner();
+      }
+    });
+
+    function simulateQRDetection() {
+      // In real implementation, this would be handled by QR library
+      if (prefillBrand) {
+        alert(`Scanned item from ${prefillBrand}! Now add a photo and confirm details.`);
+        resetScanner();
+        document.getElementById('itemImage').focus();
+      } else {
+        // Simulate generic QR scan
+        alert('Item scanned! Please complete the details below.');
+        resetScanner();
+      }
+    }
+
+    cancelScan.addEventListener('click', resetScanner);
+
+    uploadImage.addEventListener('click', function() {
+      resetScanner();
+      document.getElementById('itemImage').click();
+    });
+
+    function resetScanner() {
+      // Stop camera stream
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      
+      // Reset UI
+      cameraScanner.style.display = 'none';
+      cameraScanner.innerHTML = '<div class="scanner-overlay"></div>';
+      scannerActions.style.display = 'none';
+      scannerPlaceholder.style.display = 'flex';
+      startScanner.style.display = 'block';
+    }
+
+    // Form submission
+    document.getElementById('itemForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = {
+        brand: document.getElementById('brand').value,
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value,
+        tags: document.getElementById('tags').value.split(',').map(tag => tag.trim())
+      };
+
+      // Basic validation
+      if (!formData.brand || !formData.category) {
+        alert('Please fill in at least Brand and Category fields.');
+        return;
+      }
+
+      // Here you would send data to your backend
+      console.log('Adding item:', formData);
+      
+      // Simulate successful addition
+      alert('Item added to your archive!');
+      window.location.href = 'index.html';
+    });
+
+    // Preview uploaded image
+    document.getElementById('itemImage').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.createElement('div');
+          preview.className = 'preview-item';
+          preview.innerHTML = `
+            <img src="${e.target.result}" alt="Preview">
+            <p>Image preview</p>
+          `;
+          
+          // Remove existing preview if any
+          const existingPreview = document.querySelector('.preview-item');
+          if (existingPreview) {
+            existingPreview.remove();
+          }
+          
+          // Insert after the file input
+          this.parentNode.appendChild(preview);
+        }.bind(this);
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+</body>
+</html>
