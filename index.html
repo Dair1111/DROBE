@@ -38,13 +38,13 @@
       padding: 12px 35px;
     }
 
-.logo {
-  font-size: 13px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-decoration: none;   /* remove underline */
-  color: #111;             /* keep same color */
-}
+    .logo {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;   /* remove underline */
+      color: #111;             /* keep same color */
+    }
 
     nav ul {
       margin: 0;
@@ -164,7 +164,7 @@
       padding: 35px;
       display: grid;
       grid-template-columns: repeat(7, 1fr);  /* 7 image columns */
-      column-gap: 120px;                      /* gutter between columns*/
+      column-gap: 120px;                      /* gutter between columns */
       row-gap: 150px;                         /* vertical distance between rows */
     }
 
@@ -173,6 +173,7 @@
       height: auto;
       display: block;
       transition: transform 0.3s ease;
+      cursor: pointer;
     }
 
     .gallery img:hover {
@@ -217,6 +218,84 @@
     .shuffle-btn:hover {
       background: #333;
     }
+
+    /* ====== DELETE MODAL ====== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-panel {
+      background: #fff;
+      border: 1px solid #111;
+      padding: 18px 20px 16px;
+      min-width: 260px;
+      max-width: 360px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+      font-size: 11px;
+      letter-spacing: 0.02em;
+    }
+
+    .modal-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+    }
+
+    .modal-text {
+      font-size: 11px;
+      color: #333;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+
+    .modal-note {
+      font-size: 10px;
+      color: #777;
+      margin-bottom: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .modal-btn {
+      border: 1px solid #111;
+      background: transparent;
+      padding: 4px 10px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      font-family: quasimoda, sans-serif;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .modal-btn.confirm {
+      background: #111;
+      color: #fff;
+    }
+
+    .modal-btn.confirm:hover {
+      background: #000;
+    }
+
+    .modal-btn.cancel:hover {
+      background: #f2f2f2;
+    }
   </style>
 </head>
 <body>
@@ -224,7 +303,7 @@
   <!-- TOP NAVBAR -->
   <header>
     <div class="nav-inner">
-<a href="index.html" class="logo">DROBE</a>
+      <a href="index.html" class="logo">DROBE</a>
 
       <nav>
         <ul class="menu">
@@ -324,132 +403,252 @@
   <!-- Shuffle Button -->
   <button class="shuffle-btn" id="shuffleBtn">Shuffle Items</button>
 
+  <!-- DELETE MODAL -->
+  <div class="modal-backdrop" id="deleteModal">
+    <div class="modal-panel">
+      <div class="modal-title">Remove item?</div>
+      <div class="modal-text">
+        This will remove this item from your DROBE archive.
+      </div>
+      <div class="modal-note">
+        Double-click only works on items you've added via <strong>Add → Upload</strong>. The default sample wardrobe cannot be deleted.
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" id="deleteCancelBtn">Cancel</button>
+        <button class="modal-btn confirm" id="deleteConfirmBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // Fisher-Yates shuffle
-    function shuffleArray(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
+  // Fisher-Yates shuffle
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  // All items (static + user) live here
+  // each: { id, category, html, source: 'static' | 'user' }
+  let items = [];
+
+  const categoryKeys = ['tops','outerwears','bottoms','dresses','shoes','accessories','bags','whatifs'];
+
+  let drobeItems = [];
+  let currentCategory = 'all';
+  let pendingDeleteId = null;
+
+  const gallery = document.getElementById('gallery');
+
+  /* ---------- STATIC WARDROBE ITEMS ---------- */
+
+  function addStaticItem(category, html) {
+    items.push({
+      id: null,
+      category,
+      html,
+      source: 'static'
+    });
+  }
+
+  function buildStaticItems() {
+    // Tops (24 items)
+    for (let i = 1; i <= 24; i++) {
+      const html = `<img src="top${i}.png" alt="Top ${i}">`;
+      addStaticItem('tops', html);
     }
 
-    // Category image storage
-    const categories = {
-      all: [],
-      tops: [],
-      outerwears: [],
-      bottoms: [],
-      dresses: [],
-      shoes: [],
-      accessories: [],
-      bags: [],
-      whatifs: []
-    };
+    // Outerwears (19 items)
+    for (let i = 1; i <= 19; i++) {
+      const html = `<img src="outerwear${i}.png" alt="Outerwear ${i}">`;
+      addStaticItem('outerwears', html);
+    }
 
-    // Build image HTML strings and assign to categories
-    function buildImages() {
-      // Tops (24 items)
-      for (let i = 1; i <= 24; i++) {
-        const img = `<img src="top${i}.png" alt="Top ${i}">`;
-        categories.all.push(img);
-        categories.tops.push(img);
+    // Bottoms (37 items)
+    for (let i = 1; i <= 37; i++) {
+      const html = `<img src="bottom${i}.png" alt="Bottom ${i}">`;
+      addStaticItem('bottoms', html);
+    }
+
+    // Dresses (23 items)
+    for (let i = 1; i <= 23; i++) {
+      const html = `<img src="dress${i}.png" alt="Dress ${i}">`;
+      addStaticItem('dresses', html);
+    }
+
+    // Shoes (21 items)
+    for (let i = 1; i <= 21; i++) {
+      const html = `<img src="shoe${i}.png" alt="Shoe ${i}">`;
+      addStaticItem('shoes', html);
+    }
+
+    // Accessories (28 items)
+    for (let i = 1; i <= 28; i++) {
+      let html;
+      if (i === 8) {
+        html = `<a href="earing(reciept).html"><img src="acc8.png" alt="Accessory 8"></a>`;
+      } else {
+        html = `<img src="acc${i}.png" alt="Accessory ${i}">`;
       }
+      addStaticItem('accessories', html);
+    }
 
-      // Outerwears (19 items)
-      for (let i = 1; i <= 19; i++) {
-        const img = `<img src="outerwear${i}.png" alt="Outerwear ${i}">`;
-        categories.all.push(img);
-        categories.outerwears.push(img);
-      }
+    // Bags (23 items)
+    for (let i = 1; i <= 23; i++) {
+      const html = `<img src="bag${i}.png" alt="Bag ${i}">`;
+      addStaticItem('bags', html);
+    }
 
-      // Bottoms (37 items)
-      for (let i = 1; i <= 37; i++) {
-        const img = `<img src="bottom${i}.png" alt="Bottom ${i}">`;
-        categories.all.push(img);
-        categories.bottoms.push(img);
-      }
+    // What ifs (15 items)
+    for (let i = 1; i <= 15; i++) {
+      const html = `
+        <div class="whatif-wrapper">
+          <div class="whatif-badge"></div>
+          <img src="if${i}.png" alt="What if ${i}">
+        </div>
+      `;
+      addStaticItem('whatifs', html);
+    }
+  }
 
-      // Dresses (23 items)
-      for (let i = 1; i <= 23; i++) {
-        const img = `<img src="dress${i}.png" alt="Dress ${i}">`;
-        categories.all.push(img);
-        categories.dresses.push(img);
-      }
+  /* ---------- USER ITEMS FROM LOCALSTORAGE ---------- */
 
-      // Shoes (21 items)
-      for (let i = 1; i <= 21; i++) {
-        const img = `<img src="shoe${i}.png" alt="Shoe ${i}">`;
-        categories.all.push(img);
-        categories.shoes.push(img);
-      }
+  function loadUserItems() {
+    drobeItems = JSON.parse(localStorage.getItem('drobeItems') || '[]');
 
-      // Accessories (28 items)
-      for (let i = 1; i <= 28; i++) {
-        let img;
-        if (i === 8) {
-          // acc8 links to the earring receipt page
-          img = `<a href="earing(reciept).html"><img src="acc8.png" alt="Accessory 8"></a>`;
-        } else {
-          img = `<img src="acc${i}.png" alt="Accessory ${i}">`;
+    let changed = false;
+
+    drobeItems.forEach((item, index) => {
+      if (!item.imageDataUrl) return;
+
+      // 🔑 Normalize id → ALWAYS string
+      if (!item.id) {
+        item.id = 'item-' + Date.now() + '-' + index;
+        changed = true;
+      } else {
+        const newId = String(item.id);
+        if (newId !== item.id) {
+          item.id = newId;
+          changed = true;
         }
-        categories.all.push(img);
-        categories.accessories.push(img);
       }
 
-      // Bags (23 items)
-      for (let i = 1; i <= 23; i++) {
-        const img = `<img src="bag${i}.png" alt="Bag ${i}">`;
-        categories.all.push(img);
-        categories.bags.push(img);
-      }
+      const alt = item.description || item.brand || 'Closet item';
+      const id = item.id;
+      const html = `<img src="${item.imageDataUrl}" alt="${alt}" data-item-id="${id}">`;
 
-      // What ifs (15 items) with corner badge
-      for (let i = 1; i <= 15; i++) {
-        const img = `
-          <div class="whatif-wrapper">
-            <div class="whatif-badge"></div>
-            <img src="if${i}.png" alt="What if ${i}">
-          </div>
-        `;
-        categories.all.push(img);
-        categories.whatifs.push(img);
-      }
-    }
+      const catKey = item.category && categoryKeys.includes(item.category)
+        ? item.category
+        : 'tops';
 
-    const gallery = document.getElementById('gallery');
-    let currentCategory = 'all';
-
-    // Render a given category
-    function renderCategory(categoryKey, shuffle = false) {
-      const imgs = categories[categoryKey] || categories.all;
-      const toRender = shuffle ? shuffleArray([...imgs]) : imgs;
-      gallery.innerHTML = toRender.join('');
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      // Build all category arrays
-      buildImages();
-
-      // Initial view: all items, shuffled
-      renderCategory('all', true);
-
-      // Category link behaviour
-      const categoryLinks = document.querySelectorAll('.category-link');
-      categoryLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-          e.preventDefault();
-          const cat = this.dataset.category || 'all';
-          currentCategory = cat;
-          renderCategory(cat, true); // shuffle when switching category
-        });
-      });
-
-      // Shuffle current category
-      document.getElementById('shuffleBtn').addEventListener('click', function() {
-        renderCategory(currentCategory, true);
+      items.push({
+        id,
+        category: catKey,
+        html,
+        source: 'user'
       });
     });
-  </script>
+
+    // If we normalized anything, save back
+    if (changed) {
+      localStorage.setItem('drobeItems', JSON.stringify(drobeItems));
+    }
+  }
+
+  /* ---------- RENDERING & INTERACTION ---------- */
+
+  function getItemsForCategory(categoryKey) {
+    if (categoryKey === 'all') {
+      return items.slice();
+    }
+    return items.filter(it => it.category === categoryKey);
+  }
+
+  function attachDeleteHandlers() {
+    const userImgs = document.querySelectorAll('img[data-item-id]');
+    const modal = document.getElementById('deleteModal');
+
+    userImgs.forEach(img => {
+      img.addEventListener('dblclick', () => {
+        const id = img.dataset.itemId;
+        if (!id) return;
+        pendingDeleteId = id;
+        modal.classList.add('active');
+      });
+    });
+  }
+
+  function renderCategory(categoryKey, doShuffle = false) {
+    currentCategory = categoryKey;
+    let list = getItemsForCategory(categoryKey);
+    if (doShuffle) list = shuffleArray([...list]);
+
+    gallery.innerHTML = list.map(it => it.html).join('');
+    attachDeleteHandlers();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    currentCategory = 'all';
+
+    buildStaticItems();
+    loadUserItems();
+
+    renderCategory('all', true);
+
+    // Category links
+    const categoryLinks = document.querySelectorAll('.category-link');
+    categoryLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const cat = link.dataset.category || 'all';
+        renderCategory(cat, true);
+      });
+    });
+
+    // Shuffle
+    document.getElementById('shuffleBtn').addEventListener('click', () => {
+      renderCategory(currentCategory, true);
+    });
+
+    // Modal controls
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteCancelBtn = document.getElementById('deleteCancelBtn');
+    const deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
+
+    function closeDeleteModal() {
+      pendingDeleteId = null;
+      deleteModal.classList.remove('active');
+    }
+
+    deleteCancelBtn.addEventListener('click', closeDeleteModal);
+
+    deleteConfirmBtn.addEventListener('click', () => {
+      if (!pendingDeleteId) {
+        closeDeleteModal();
+        return;
+      }
+
+      // 🔥 Remove from drobeItems (string compare)
+      drobeItems = drobeItems.filter(item => String(item.id) !== String(pendingDeleteId));
+      localStorage.setItem('drobeItems', JSON.stringify(drobeItems));
+
+      // 🔥 Remove from in-memory items
+      items = items.filter(it => String(it.id) !== String(pendingDeleteId));
+
+      closeDeleteModal();
+      renderCategory(currentCategory, false);
+    });
+
+    // Close modal by clicking backdrop
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) {
+        closeDeleteModal();
+      }
+    });
+  });
+</script>
+
 </body>
 </html>

@@ -80,7 +80,6 @@
       border-bottom-color: #111;
     }
 
-    /* Dropdown base */
     .submenu {
       position: absolute;
       top: 100%;
@@ -117,13 +116,11 @@
       background: #f3f3f3;
     }
 
-    /* Show first-level submenu on hover OR while focused */
     .menu > li:hover > .submenu,
     .menu > li:focus-within > .submenu {
       display: block;
     }
 
-    /* Nested submenu (for Category, Saved looks) */
     .submenu .submenu {
       top: 0;
       left: 100%;
@@ -135,7 +132,6 @@
       display: block;
     }
 
-    /* Account section on the right */
     .right-nav {
       display: flex;
       align-items: center;
@@ -158,7 +154,7 @@
 
     /* ====== PAGE LAYOUT FOR SCAN CONTENT ====== */
     .scan-page-wrapper {
-      min-height: calc(100vh - 70px); /* viewport minus approx header height */
+      min-height: calc(100vh - 70px);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -326,7 +322,6 @@
   <!-- TOP NAVBAR -->
   <header>
     <div class="nav-inner">
-      <!-- Clickable logo back to home -->
       <a href="index.html" class="logo">DROBE</a>
 
       <nav>
@@ -335,7 +330,6 @@
           <li>
             <a href="#">Browse</a>
             <ul class="submenu">
-              <!-- Back to home grid -->
               <li><a href="index.html">All</a></li>
               <li>
                 Category
@@ -437,7 +431,7 @@
           </div>
         </div>
 
-        <p class="demo-text">
+        <p class="demo-text" id="demoText">
           This item has been automatically added to your DROBE archive. The QR code recognized the brand and pre-filled all the details for you.
         </p>
 
@@ -460,84 +454,66 @@
   </main>
 
   <script>
-    // Map brands/items to details
-    const itemDatabase = {
-      'aritzia': {
-        name: 'Cosmic Shift Hoodie',
-        category: 'Tops',
-        color: 'Heather Grey',
-        size: 'Medium',
-        price: '$98'
-      },
-      'levis': {
-        name: '501 Original Jeans',
-        category: 'Bottoms', 
-        color: 'Midnight Wash',
-        size: '32x32',
-        price: '$128'
-      },
-      'simuero': {
-        name: 'Corola E Talo Earrings',
-        category: 'Accessories',
-        color: 'Silver',
-        size: 'One Size',
-        price: '$245'
-      },
-      'arket': {
-        name: 'Wool Blend Dress',
-        category: 'Dresses',
-        color: 'Black',
-        size: 'Small',
-        price: '$320'
-      },
-      'nike': {
-        name: 'Air Force 1',
-        category: 'Shoes',
-        color: 'White',
-        size: 'US 9',
-        price: '$110'
-      },
-      'cos': {
-        name: 'Wool Overshirt',
-        category: 'Outerwears',
-        color: 'Camel',
-        size: 'Medium',
-        price: '$185'
-      },
-      'acnestudios': {
-        name: 'Leo Bag',
-        category: 'Bags',
-        color: 'Black',
-        size: 'One Size',
-        price: '$680'
-      }
-    };
-
-    // Get URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const brand = urlParams.get('brand') || 'simuero';
-    const customItem = urlParams.get('item');
-    const customCategory = urlParams.get('category');
+    const itemIdParam = urlParams.get('itemId');
 
-    // Find the item data (fallback to simuero)
-    const itemData = itemDatabase[brand.toLowerCase()] || itemDatabase['simuero'];
-    
-    // Override with custom parameters if provided
-    if (customItem) itemData.name = customItem;
-    if (customCategory) itemData.category = customCategory;
+    const items = JSON.parse(localStorage.getItem('drobeItems') || '[]');
+    let item = null;
 
-    // Update the page
-    document.getElementById('itemDetails').innerHTML = `
-      <strong>${itemData.name}</strong>
-      Brand: ${brand.charAt(0).toUpperCase() + brand.slice(1)}<br>
-      Category: ${itemData.category}<br>
-      Color: ${itemData.color}<br>
-      Size: ${itemData.size}<br>
-      Price: ${itemData.price}
-    `;
+    if (itemIdParam) {
+      item = items.find(
+        it => String(it.id) === itemIdParam || it.id === Number(itemIdParam)
+      );
+    }
 
-    // Update page title text
-    document.querySelector('h1').textContent = `${itemData.name} Added`;
+    // Fallback: try last added item if no id or not found
+    if (!item) {
+      const lastId = localStorage.getItem('drobeLastAddedItemId');
+      if (lastId) {
+        item = items.find(
+          it => String(it.id) === lastId || it.id === Number(lastId)
+        );
+      }
+    }
+
+    const itemImageEl = document.getElementById('itemImage');
+    const itemDetailsEl = document.getElementById('itemDetails');
+    const titleEl = document.querySelector('h1');
+    const demoTextEl = document.getElementById('demoText');
+
+    if (item) {
+      const displayName = item.description || item.brand || 'New item';
+
+      titleEl.textContent = `${displayName} Added`;
+
+      if (item.imageDataUrl) {
+        itemImageEl.src = item.imageDataUrl;
+        itemImageEl.alt = displayName;
+      }
+
+      const tagsText = item.tags && item.tags.length
+        ? item.tags.join(', ')
+        : 'None';
+
+      itemDetailsEl.innerHTML = `
+        <strong>${displayName}</strong>
+        Brand: ${item.brand || '—'}<br>
+        Category: ${item.category || '—'}<br>
+        Description: ${item.description || '—'}<br>
+        Tags: ${tagsText}<br>
+        Added: ${item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Just now'}
+      `;
+
+      demoTextEl.textContent =
+        'This item has been added to your DROBE archive. You can now find it in your closet grid and start pairing it into looks.';
+    } else {
+      // If nothing found, show a generic fallback
+      itemDetailsEl.innerHTML = `
+        <strong>New item</strong>
+        We couldn’t find detailed info for this item in your archive.
+        It may not have been saved correctly.
+      `;
+    }
 
     // Add interactive feedback to primary button
     const viewBtn = document.getElementById('viewClosetBtn');

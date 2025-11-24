@@ -40,6 +40,8 @@
       font-size: 13px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+      text-decoration: none;
+      color: #111;
     }
 
     nav ul {
@@ -318,6 +320,13 @@
       margin: 0 auto 20px;
       background: #000;
       position: relative;
+      overflow: hidden;
+    }
+
+    #camera-scanner video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .scanner-overlay {
@@ -328,6 +337,7 @@
       height: 100%;
       border: 2px solid white;
       box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
     }
 
     .scanner-actions {
@@ -341,7 +351,7 @@
   <!-- TOP NAVBAR -->
   <header>
     <div class="nav-inner">
-      <div class="logo">DROBE</div>
+      <a href="index.html" class="logo">DROBE</a>
 
       <nav>
         <ul class="menu">
@@ -372,8 +382,8 @@
           <li>
             <a href="#">Pair</a>
             <ul class="submenu">
-              <li><a href="#">Scroll &amp; Select</a></li>
-              <li><a href="#">Layer &amp; Preview</a></li>
+              <li><a href="scroll&select.html">Scroll &amp; Select</a></li>
+              <li><a href="layer&preview.html">Layer &amp; Preview</a></li>
             </ul>
           </li>
 
@@ -384,7 +394,7 @@
               <li>
                 Saved looks
                 <ul class="submenu">
-                  <li><a href="#">Mine</a></li>
+                  <li><a href="savedlooks.html">Mine</a></li>
                   <li><a href="#">Others / Inspirations</a></li>
                 </ul>
               </li>
@@ -527,58 +537,57 @@
   </div>
 
   <script>
-    // Get URL parameters for pre-filled data
+    // -------- URL PREFILL --------
     const urlParams = new URLSearchParams(window.location.search);
     const prefillBrand = urlParams.get('brand');
     const prefillCategory = urlParams.get('category');
 
-    // Update brand prefill notification
     const brandPrefill = document.getElementById('brandPrefill');
+    const brandInput = document.getElementById('brand');
+    const categorySelect = document.getElementById('category');
+
     if (prefillBrand) {
       brandPrefill.textContent = `Detected brand: ${prefillBrand}`;
-      document.getElementById('brand').value = prefillBrand;
+      brandInput.value = prefillBrand;
     } else {
       brandPrefill.style.display = 'none';
     }
 
-    // Pre-fill category if provided
     if (prefillCategory) {
-      document.getElementById('category').value = prefillCategory;
+      categorySelect.value = prefillCategory;
     }
 
-    // Scanner functionality
+    // -------- SCANNER + IMAGE CAPTURE --------
     const startScanner = document.getElementById('startScanner');
     const scannerPlaceholder = document.getElementById('scanner-placeholder');
     const cameraScanner = document.getElementById('camera-scanner');
     const scannerActions = document.getElementById('scannerActions');
     const cancelScan = document.getElementById('cancelScan');
     const uploadImage = document.getElementById('uploadImage');
+    const fileInput = document.getElementById('itemImage');
 
     let stream = null;
+    let capturedImageDataUrl = null; // data URL from scan or upload
 
     startScanner.addEventListener('click', async function() {
       try {
-        // Hide placeholder, show camera and actions
         scannerPlaceholder.style.display = 'none';
         cameraScanner.style.display = 'block';
         scannerActions.style.display = 'flex';
         startScanner.style.display = 'none';
 
-        // Access camera
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
         });
-        
+
         const video = document.createElement('video');
         video.srcObject = stream;
         video.autoplay = true;
         video.playsInline = true;
-        
         cameraScanner.appendChild(video);
 
-        // Here you would integrate with a QR scanning library
-        setTimeout(simulateQRDetection, 2000);
-
+        // Fake QR detection + capture frame after 2s
+        setTimeout(() => simulateQRDetection(video), 2000);
       } catch (err) {
         console.error('Error accessing camera:', err);
         alert('Unable to access camera. Please check permissions.');
@@ -586,15 +595,26 @@
       }
     });
 
-    function simulateQRDetection() {
-      // In real implementation, this would be handled by QR library
-      if (prefillBrand) {
-        alert(`Scanned item from ${prefillBrand}! Now add a photo and confirm details.`);
-        resetScanner();
-        document.getElementById('itemImage').focus();
-      } else {
-        // Simulate generic QR scan
-        alert('Item scanned! Please complete the details below.');
+    function simulateQRDetection(videoEl) {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = videoEl.videoWidth || 600;
+        canvas.height = videoEl.videoHeight || 800;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+        capturedImageDataUrl = canvas.toDataURL('image/png');
+
+        showPreview(capturedImageDataUrl);
+
+        if (!prefillBrand && !brandInput.value) {
+          brandInput.value = 'Scanned brand';
+        }
+
+        alert('Item scanned! You can adjust details below, then click "Add to Closet".');
+      } catch (e) {
+        console.error('Failed to capture frame:', e);
+        alert('Scan failed, please try again or upload a photo instead.');
+      } finally {
         resetScanner();
       }
     }
@@ -603,17 +623,14 @@
 
     uploadImage.addEventListener('click', function() {
       resetScanner();
-      document.getElementById('itemImage').click();
+      fileInput.click();
     });
 
     function resetScanner() {
-      // Stop camera stream
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
         stream = null;
       }
-      
-      // Reset UI
       cameraScanner.style.display = 'none';
       cameraScanner.innerHTML = '<div class="scanner-overlay"></div>';
       scannerActions.style.display = 'none';
@@ -621,55 +638,83 @@
       startScanner.style.display = 'block';
     }
 
-    // Form submission
-    document.getElementById('itemForm').addEventListener('submit', function(e) {
+    // -------- PREVIEW HANDLING --------
+    function showPreview(dataUrl) {
+      const existing = document.querySelector('.preview-item');
+      if (existing) existing.remove();
+
+      const preview = document.createElement('div');
+      preview.className = 'preview-item';
+      preview.innerHTML = `
+        <img src="${dataUrl}" alt="Preview">
+        <p>Image preview</p>
+      `;
+
+      const formGroup = fileInput.closest('.form-group');
+      formGroup.parentNode.insertBefore(preview, formGroup.nextSibling);
+    }
+
+    fileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        capturedImageDataUrl = ev.target.result;
+        showPreview(capturedImageDataUrl);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // -------- SAVE TO LOCALSTORAGE + GO TO SCAN PAGE --------
+    const itemForm = document.getElementById('itemForm');
+
+    itemForm.addEventListener('submit', function(e) {
       e.preventDefault();
-      
+
+      const descriptionInput = document.getElementById('description');
+      const tagsInput = document.getElementById('tags');
+
       const formData = {
-        brand: document.getElementById('brand').value,
-        category: document.getElementById('category').value,
-        description: document.getElementById('description').value,
-        tags: document.getElementById('tags').value.split(',').map(tag => tag.trim())
+        brand: brandInput.value.trim(),
+        category: categorySelect.value,
+        description: descriptionInput.value.trim(),
+        tags: tagsInput.value
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(Boolean)
       };
 
-      // Basic validation
       if (!formData.brand || !formData.category) {
         alert('Please fill in at least Brand and Category fields.');
         return;
       }
 
-      // Here you would send data to your backend
-      console.log('Adding item:', formData);
-      
-      // Simulate successful addition
-      alert('Item added to your archive!');
-      window.location.href = 'index.html';
-    });
-
-    // Preview uploaded image
-    document.getElementById('itemImage').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const preview = document.createElement('div');
-          preview.className = 'preview-item';
-          preview.innerHTML = `
-            <img src="${e.target.result}" alt="Preview">
-            <p>Image preview</p>
-          `;
-          
-          // Remove existing preview if any
-          const existingPreview = document.querySelector('.preview-item');
-          if (existingPreview) {
-            existingPreview.remove();
-          }
-          
-          // Insert after the file input
-          this.parentNode.appendChild(preview);
-        }.bind(this);
-        reader.readAsDataURL(file);
+      if (!capturedImageDataUrl) {
+        const proceed = confirm('You did not add a photo (scan or upload). Continue without an image?');
+        if (!proceed) return;
       }
+
+     const existingItems = JSON.parse(localStorage.getItem('drobeItems') || '[]');
+const id = String(Date.now());  // <-- make sure id is ALWAYS a string
+
+const newItem = {
+  id,
+  brand: formData.brand,
+  category: formData.category,
+  description: formData.description,
+  tags: formData.tags,
+  imageDataUrl: capturedImageDataUrl || null,
+  createdAt: new Date().toISOString()
+};
+
+
+      existingItems.push(newItem);
+      localStorage.setItem('drobeItems', JSON.stringify(existingItems));
+      localStorage.setItem('drobeLastAddedItemId', String(id));
+
+      // Go to scan confirmation page with this item
+      window.location.href = `scan.html?itemId=${id}`;
     });
   </script>
 </body>
